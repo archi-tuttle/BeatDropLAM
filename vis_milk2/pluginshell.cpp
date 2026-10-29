@@ -1889,7 +1889,7 @@ void CPluginShell::RenderBuiltInTextMsgs()
 			m_upper_left_corner_y += r.bottom-r.top + PLAYLIST_INNER_MARGIN*3;
 		}
 
-		// render 'Press F1 for Help' message in lower-right corner:
+		// render 'Press F12 for Help' message in lower-right corner:
 		if (_show_press_f1_NOW)
 		{
 			int dx = (int)(160.0f * powf(m_time/(float)(PRESS_F1_DUR), (float)(PRESS_F1_EXP)));

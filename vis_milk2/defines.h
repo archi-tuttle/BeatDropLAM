@@ -215,7 +215,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define MAX_PRESETS_PER_PAGE 32
 
-//#define PRESS_F1_MSG                 "Press F1 for Help " // leave extra space @ end, so italicized fonts don't get clipped
+//#define PRESS_F1_MSG                 "Press F12 for Help " // leave extra space @ end, so italicized fonts don't get clipped
 // defined in the stringtable resources now since 2.0e
 #define PRESS_F1_DUR                 3.0f // in seconds
 #define PRESS_F1_EXP                 10.0f // exponent for how quickly it accelerates to leave the screen. 1 = linear; >1 = stays & then dashes off @ end
