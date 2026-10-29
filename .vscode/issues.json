@@ -1,6 +1,32 @@
 {
   "version": 1,
-  "groups": [],
+  "groups": [
+    {
+      "id": "main",
+      "name": "Main"
+    }
+  ],
   "people": [],
-  "issues": []
+  "issues": [
+    {
+      "id": "iss_eb9916b91ea4",
+      "title": "Remove unnecessary Key Shortcuts",
+      "description": "Remove unnecessary Key Shortcuts (see code, e.g. Alt+F4, Winamp Controls, etc.). Update documentation/help menu accordingly.",
+      "groupId": "main",
+      "status": "todo",
+      "priority": "medium",
+      "createdAt": "2026-10-29T12:36:57.315Z",
+      "updatedAt": "2026-10-29T12:36:57.315Z"
+    },
+    {
+      "id": "iss_e018142cd453",
+      "title": "Add general Media Controls",
+      "description": "Add general Media Controls which work with the maximum of clients (like YouTube, WMP, etc...).",
+      "groupId": "main",
+      "status": "todo",
+      "priority": "medium",
+      "createdAt": "2026-10-29T12:37:58.891Z",
+      "updatedAt": "2026-10-29T12:37:58.891Z"
+    }
+  ]
 }

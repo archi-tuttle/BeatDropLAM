@@ -2290,8 +2290,7 @@ LRESULT CPluginShell::PluginShellWindowProc(HWND hWnd, unsigned uMsg, WPARAM wPa
 			    return 0;
 
 		    case VK_ESCAPE:
-			    if (m_show_help)
-				    ToggleHelp();
+			    PostMessage(hWnd, WM_CLOSE, 0, 0);
 			    return 0;
 
 		    case VK_LEFT:
