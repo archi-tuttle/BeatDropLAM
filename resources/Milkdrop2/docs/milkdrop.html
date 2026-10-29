@@ -323,8 +323,8 @@ presets from MilkDrop 1.
             randomize some of these properties.
 
         CREATING THE MESSAGES
-            You can save up to 100 messages in the file MILK_MSG.INI in
-            your Winamp\Plugins\ folder.  To open this file, go to the 
+            You can save up to 100 messages in the file MILK_MSG.INI beside
+            BeatDrop.exe.  To open this file, go to the
             MilkDrop configuration screen (ALT+K from Winamp) and click the
             "Edit Custom Messages" button.  Or, you can just edit it 
             manually if you know how; it's plain-text.
@@ -395,8 +395,8 @@ presets from MilkDrop 1.
             any image of your choice in the foreground (on top of 
             MilkDrop) while it runs.  The sprites can fade in and out,
             move around, respond to the music, and so on.  You define
-            them in a file - <B>milk_img.ini</B> in your winamp\plugins
-            directory - much like you define custom messages, each 
+            them in a file - <B>milk_img.ini</B> beside BeatDrop.exe -
+            much like you define custom messages, each
             having an identifying code number from 00 through 99 (used
             to invoke them).  However, the way the individual sprites
             are defined is different; <EM>you write code for them</EM>, instead
@@ -406,8 +406,8 @@ presets from MilkDrop 1.
             the sprites.
 
         CREATING THE SPRITES
-            You can define up to 100 sprites in the file MILK_IMG.INI in
-            your Winamp\Plugins\ folder.  To open this file, go to the 
+            You can define up to 100 sprites in the file MILK_IMG.INI beside
+            BeatDrop.exe.  To open this file, go to the
             MilkDrop configuration screen (ALT+K from Winamp) and click the
             "Edit Sprites" button.  Or, you can just edit it manually if 
             you know how; it's plain-text.
@@ -611,7 +611,8 @@ presets from MilkDrop 1.
     SYMPTOM:
         -When I go to the Load Preset menu ('L') in MilkDrop, some of the
             presets on disk are missing.
-        -I downloaded some new presets and put them in my Plugins\MilkDrop2\Presets
+        -I downloaded some new presets and put them in the presets folder
+            beside BeatDrop.exe
             directory, but I can't access them from within MilkDrop.
     CAUSE:
         You probably have an older video card that can't handle the pixel
@@ -664,15 +665,12 @@ presets from MilkDrop 1.
         then click the 'Defaults' button.  The next time you launch
         MilkDrop, it will start you in the default preset directory.
         
-        To fix it manually (and preserve all your settings), run
-        MilkDrop, hit F8, and paste in this path:
-          C:\Program Files\Winamp\Plugins\Milkdrop2\presets
-        [or equivalent].
+                To fix it manually (and preserve all your settings), run
+                BeatDrop, hit F8, and paste in the full path to the presets folder
+                beside BeatDrop.exe.
         
-        Another way to fix it is to hit 'L', and browse all the way 
-        down to the root folder (repeatedly select ".."), then
-        go into Program Files, Winamp, Plugins, MilkDrop2, and finally,
-        presets.
+        Another way to fix it is to hit 'L' and browse to the presets
+        folder beside BeatDrop.exe.
         
             
     ENTRY 5
@@ -716,29 +714,12 @@ presets from MilkDrop 1.
         applications open, try to minimize them (i.e. shrink the window 
         down to the taskbar) so that they stay out of the painting loop.
     
-    c. Windows Vista / Winamp with per-user settings
-        Be aware that if you're running Vista as a non-admin user,
-        you can't write to (or delete from) files in the Program Files
-        directory, which is were MilkDrop 2 is installed.  So, anything
-        you try to write or save (like milkdrop's settings file, milk2.ini; 
-        or presets) will probably end up deep in some user-specific, 
-        virtualized "Program Files" directory somewhere on your hard 
-        drive.  Yell at Microsoft for this one!
-        
-        Also, if you installed Winamp with per-user settings (instead of 
-        shared settings) - on any OS, not just Vista - be aware that your
-        .INI files (milk2.ini, milk2_img.ini, milk2_cfg.ini) are all
-        stored in a folder like this:
-            
-            C:\Documents and Settings\<username>\Application Data\Winamp\Plugins         
-            
-        (Note that 'Application Data' is a hidden folder.)  However,
-        presets, textures, and things like that are all shared between
-        users, in the real [c:\Program Files]\winamp\plugins\milkdrop2 folder. 
-        If you want to keep your presets separate, you can still do that, 
-        though - just put them in a personal folder, and then seek to it
-        from within MilkDrop.  If you're using per-user settings in Winamp,
-        it will remember which folder you last used.
+    c. Standalone BeatDrop file locations
+        BeatDrop stores its settings INI files beside BeatDrop.exe.  The
+        default MilkDrop content is in sibling folders: presets, textures,
+        data, and docs.  If BeatDrop is placed in a write-protected folder,
+        Windows may prevent settings from being saved; use a writable
+        location or select a writable preset folder from within BeatDrop.
         
 
 <A NAME="7">

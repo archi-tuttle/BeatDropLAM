@@ -34,7 +34,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #define D3D_DEBUG_INFO  // declare this before including d3d9.h
 #endif
 #include <d3d9.h>
-#include <d3dx9.h>
+#include <DirectXMath.h>
+#include "textfont.h"
 #include "md_defines.h"
 #include "AutoWide.h"
 
@@ -43,7 +44,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef struct
 {
     wchar_t* msg;       // points to some character in g_szMsgPool[2][].
-    LPD3DXFONT pfont;   // note: iff this string is really a dark box, pfont will be NULL!
+    CTextFont* pfont;   // note: iff this string is really a dark box, pfont will be NULL!
     RECT rect;
     DWORD flags;
     DWORD color;
@@ -64,12 +65,12 @@ public:
     void Finish();
 
     // note: pFont must persist until DrawNow() is called!
-    int  DrawText(LPD3DXFONT pFont, char* szText, RECT* pRect, DWORD flags, DWORD color, bool bBlackBox, DWORD boxColor=0xFF000000); // actually queues the text!
-    int  DrawText(LPD3DXFONT pFont, char* szText, int len, RECT* pRect, DWORD flags, DWORD color, bool bBox, DWORD boxColor=0xFF000000) {
+    int  DrawText(CTextFont* pFont, char* szText, RECT* pRect, DWORD flags, DWORD color, bool bBlackBox, DWORD boxColor=0xFF000000); // actually queues the text!
+    int  DrawText(CTextFont* pFont, char* szText, int len, RECT* pRect, DWORD flags, DWORD color, bool bBox, DWORD boxColor=0xFF000000) {
         return DrawTextW(pFont, AutoWide(szText), pRect, flags, color, bBox, boxColor);
     };
-    int  DrawTextW(LPD3DXFONT pFont, wchar_t* szText, RECT* pRect, DWORD flags, DWORD color, bool bBlackBox, DWORD boxColor=0xFF000000); // actually queues the text!
-    int  DrawTextW(LPD3DXFONT pFont, wchar_t* szText, int len, RECT* pRect, DWORD flags, DWORD color, bool bBox, DWORD boxColor=0xFF000000) {
+    int  DrawTextW(CTextFont* pFont, wchar_t* szText, RECT* pRect, DWORD flags, DWORD color, bool bBlackBox, DWORD boxColor=0xFF000000); // actually queues the text!
+    int  DrawTextW(CTextFont* pFont, wchar_t* szText, int len, RECT* pRect, DWORD flags, DWORD color, bool bBox, DWORD boxColor=0xFF000000) {
         return DrawTextW(pFont, szText, pRect, flags, color, bBox, boxColor);
     };
     void DrawBox(LPRECT pRect, DWORD boxColor);

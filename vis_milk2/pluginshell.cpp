@@ -255,7 +255,7 @@ D3DFORMAT CPluginShell::GetBackBufZFormat()
 {
 	if (m_lpDX) return m_lpDX->GetZFormat(); else return D3DFMT_UNKNOWN;
 };
-LPD3DXFONT CPluginShell::GetFont(eFontIndex idx)
+CTextFont* CPluginShell::GetFont(eFontIndex idx)
 {
 	if (idx >= 0 && idx < NUM_BASIC_FONTS + NUM_EXTRA_FONTS) return m_d3dx_font[idx]; else return NULL;
 };
@@ -542,7 +542,7 @@ int CPluginShell::AllocateFonts(IDirect3DDevice9* pDevice)
 {
 	// Create D3DX system font:
 	for (int i=0; i<NUM_BASIC_FONTS + NUM_EXTRA_FONTS; i++)
-		if (D3DXCreateFontW(pDevice,  //m_font[i],
+		if (CreateTextFont(pDevice,  //m_font[i],
 		                   m_fontinfo[i].nSize,
 		                   m_fontinfo[i].nSize*4/10,
 		                   m_fontinfo[i].bBold ? 900 : 400,
@@ -587,7 +587,8 @@ void CPluginShell::AllocateTextSurface()
 	int w = m_vjd3d9_device ? m_nTextWndWidth  : GetWidth() ;
 	int h = m_vjd3d9_device ? m_nTextWndHeight : GetHeight();
 
-	if (D3D_OK != D3DXCreateTexture(pDevice, w, h, 1, D3DUSAGE_RENDERTARGET, GetBackBufFormat(), D3DPOOL_DEFAULT, &m_lpDDSText))
+	if (D3D_OK != pDevice->CreateTexture(w, h, 1, D3DUSAGE_RENDERTARGET,
+		GetBackBufFormat(), D3DPOOL_DEFAULT, &m_lpDDSText, NULL))
 		m_lpDDSText = NULL; // OK if there's not enough mem for it!
 	else
 	{
@@ -1800,15 +1801,15 @@ void CPluginShell::PrepareFor2DDrawing_B(IDirect3DDevice9 *pDevice, int w, int h
 
 	// set up for 2D drawing:
 	{
-		D3DXMATRIX Ortho2D;
-		D3DXMATRIX Identity;
+		DirectX::XMFLOAT4X4 Ortho2D;
+		DirectX::XMFLOAT4X4 Identity;
 
-		D3DXMatrixOrthoLH(&Ortho2D, (float)w, (float)h, 0.0f, 1.0f);
-		D3DXMatrixIdentity(&Identity);
+		DirectX::XMStoreFloat4x4(&Ortho2D, DirectX::XMMatrixOrthographicLH((float)w, (float)h, 0.0f, 1.0f));
+		DirectX::XMStoreFloat4x4(&Identity, DirectX::XMMatrixIdentity());
 
-		pDevice->SetTransform(D3DTS_PROJECTION, &Ortho2D);
-		pDevice->SetTransform(D3DTS_WORLD, &Identity);
-		pDevice->SetTransform(D3DTS_VIEW, &Identity);
+		pDevice->SetTransform(D3DTS_PROJECTION, reinterpret_cast<const D3DMATRIX*>(&Ortho2D));
+		pDevice->SetTransform(D3DTS_WORLD, reinterpret_cast<const D3DMATRIX*>(&Identity));
+		pDevice->SetTransform(D3DTS_VIEW, reinterpret_cast<const D3DMATRIX*>(&Identity));
 	}
 }
 
@@ -2375,7 +2376,8 @@ void CPluginShell::AlignWaves()
 		space[0] = 576 - nSamples;
 
 		// potential optimization: could reuse (instead of recompute) mip levels for m_oldwave[2][]?
-		for (int octave=1; octave<octaves; octave++)
+		int octave = 0;
+		for (octave=1; octave<octaves; octave++)
 		{
 			spls[octave] = spls[octave-1]/2;
 			space[octave] = space[octave-1]/2;

@@ -1607,11 +1607,12 @@ own presets.
     heavy (to send to other people) and will cause a little delay
     when you switch to a preset that uses them (and loads the texture).  
     
-    Save the texture to the folder:
+    For standalone BeatDrop, save the texture in the textures folder beside
+    BeatDrop.exe.  You can also keep a texture in the current preset folder.
     
-        c:\program files\winamp\plugins\milkdrop2\textures
+        &lt;folder containing BeatDrop.exe&gt;\textures
         
-    or wherever you installed Winamp and MilkDrop to.  Let's imagine
+    Let's imagine
     you called your texture billy.jpg.
     
     Then, in any shader, above the shader_body section, declare a sampler 
@@ -1641,7 +1642,7 @@ own presets.
         
     So first it will try to find billy.jpg; then billy.dds; and so
     on, until it finds a valid texture.  If the texture can not be
-    found in the "milkdrop2\textures" directory, it will then also try
+    found in the "textures" folder beside BeatDrop.exe, it will then also try
     to find it **in the current preset directory**; this is done so that
     preset downloaders can be lazy and just put the presets, along
     with the textures that come with them, into the same directory.

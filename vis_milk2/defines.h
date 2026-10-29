@@ -55,26 +55,22 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // new version.  ***To disable this behavior, just always leave this at 0. ***
 #define INT_SUBVERSION  5      //straight=0, a=1, b=2, ...
 
-// SUBDIR puts milkdrop's documentation, INI file, presets folder, etc.
-// in a subdir underneath Winamp\Plugins.
-#define SUBDIR  L"Milkdrop2\\"   //""
+// Resource folders are stored beside the standalone executable.
+#define SUBDIR  L""
 
 // INIFILE is the name of the .INI file that will save the user's
 // config panel settings.  Do not include a path; just give the filename.
-// The actual file will be stored in the WINAMP\PLUGINS directory,
-// OR POSSIBLY c:\application data\...(user)...\winamp\plugins!!! - if
-// they have sep. settings for each user!
+// The standalone executable stores this file beside itself.
 #define INIFILE         L"milk2.ini"      //*** DO NOT PUT IN A SUBDIR because on save, if dir doesn't already exist,
                                          //     it won't be able to save the INI file.
-#define MSG_INIFILE     L"milk2_msg.ini"  //*** could be in c:\program files\winamp\plugins, or in
-#define IMG_INIFILE     L"milk2_img.ini"  //                c:\application data\...user...\winamp\plugins !!
+#define MSG_INIFILE     L"milk2_msg.ini"
+#define IMG_INIFILE     L"milk2_img.ini"
 #define ADAPTERSFILE	L"milk2_adapters.txt"
 
 // DOCFILE is the name of the documentation file that you'll write
 // for your users.  Do not include a path; just give the filename.
 // When a user clicks the 'View Docs' button on the config panel,
-// the plugin will try to display this file, located in the
-// WINAMP\PLUGINS directory.
+// the app will try to display this file from its docs directory.
 //
 // ***Note that the button will be invisible (on the config panel)
 // at runtime if this string is empty.***

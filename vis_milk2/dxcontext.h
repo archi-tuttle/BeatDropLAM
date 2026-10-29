@@ -37,7 +37,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define D3D_DEBUG_INFO  // declare this before including d3d9.h
 #endif
 #include <d3d9.h>
-#include <d3dx9.h>
 
 #define SNAP_WINDOWED_MODE_BLOCKSIZE  32    // or use 0 if you don't want snapping
 
@@ -103,7 +102,7 @@ protected:
     D3DMULTISAMPLE_TYPE    m_multisamp;
     D3DFORMAT              m_zFormat;
     D3DFORMAT              m_orig_windowed_mode_format[MAX_DXC_ADAPTERS];
-    HMODULE m_hmod_d3d9, m_hmod_d3dx9;
+    HMODULE m_hmod_d3d9;
     int  m_ordinal_adapter;
     HWND m_hwnd;
     HWND m_hwnd_winamp;

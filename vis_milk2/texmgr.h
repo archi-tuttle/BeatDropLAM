@@ -39,6 +39,14 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../ns-eel2/ns-eel.h"
 #include "md_defines.h"
 
+HRESULT LoadTextureFromFileW(
+	IDirect3DDevice9* device,
+	const wchar_t* filename,
+	DWORD colorKey,
+	IDirect3DTexture9** texture,
+	UINT* width,
+	UINT* height);
+
 #define TEXMGR_ERROR_MASK                 0x0F
 #define TEXMGR_ERR_SUCCESS                0
 #define TEXMGR_ERR_BAD_INDEX              1

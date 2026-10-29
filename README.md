@@ -30,9 +30,12 @@ Use BeatDrop with your favourite
 
 * WASAPI-compatible sound card
 
-* DirectX 9 - compatible GPU
+* Direct3D 9-compatible GPU and graphics driver
 
-* DirectX End-User [Runtimes](https://www.microsoft.com/en-us/download/details.aspx?id=8109) (also included in the installer) contains the required 32-bit helper libraries d3dx9_43.dll and d3dx9_31.dll
+The build output includes the 32-bit `d3dcompiler_47.dll` runtime used to compile legacy Direct3D 9 shaders. Keep this DLL beside `BeatDrop.exe` when distributing the standalone build.
+
+## Build on Windows
+Install Visual Studio Build Tools with the C++ desktop workload and a Windows 10 SDK. Open the repository in VS Code and run `BeatDrop: Build Debug (Win32)` or `BeatDrop: Build Release (Win32)` from the Tasks menu. The Debug task is also the default build task. Each output folder contains `BeatDrop.exe`, `d3dcompiler_47.dll`, and the `data`, `docs`, `presets`, and `textures` resource folders.
 
 ## Acknowledgements
 Special thanks to:

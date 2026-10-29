@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "BeatDrop: Build Debug (Win32)",
+      "type": "shell",
+      "command": "$vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\\Installer\\vswhere.exe'; $msbuild = & $vswhere -latest -products '*' -find 'MSBuild\\**\\Bin\\MSBuild.exe' | Select-Object -First 1; if (-not $msbuild) { throw 'MSBuild was not found. Install Visual Studio Build Tools with the C++ workload.' }; & $msbuild '${workspaceFolder}\\BeatDrop.sln' /m /p:Configuration=Debug /p:Platform=Win32 /v:minimal",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "BeatDrop: Build Release (Win32)",
+      "type": "shell",
+      "command": "$vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\\Installer\\vswhere.exe'; $msbuild = & $vswhere -latest -products '*' -find 'MSBuild\\**\\Bin\\MSBuild.exe' | Select-Object -First 1; if (-not $msbuild) { throw 'MSBuild was not found. Install Visual Studio Build Tools with the C++ workload.' }; & $msbuild '${workspaceFolder}\\BeatDrop.sln' /m /p:Configuration=Release /p:Platform=Win32 /v:minimal",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

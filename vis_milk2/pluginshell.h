@@ -69,8 +69,8 @@ public:
     float     GetTime();           // returns current animation time (in seconds) (starts at zero) (updated once per frame)
     float     GetFps();            // returns current estimate of framerate (frames per second)
     HINSTANCE GetInstance();       // returns handle to the plugin DLL module; used for things like loading resources (dialogs, bitmaps, icons...) that are built into the plugin.
-    wchar_t*  GetPluginsDirPath(); // usually returns 'c:\\program files\\winamp\\plugins\\'
-    wchar_t*  GetConfigIniFile();  // usually returns 'c:\\program files\\winamp\\plugins\\something.ini' - filename is determined from identifiers in 'defines.h'
+    wchar_t*  GetPluginsDirPath(); // returns the host module directory; for standalone BeatDrop, this is the executable directory
+    wchar_t*  GetConfigIniFile();  // returns the config file path beside the host module; the filename is defined in 'defines.h'
 	char*     GetConfigIniFileA();
 protected:
 
@@ -94,7 +94,7 @@ protected:
     // FONTS & TEXT
     // ------------------------------------------------------------
 public:
-    LPD3DXFONT   GetFont(eFontIndex idx);       // returns a D3DX font handle for drawing text; see shell_defines.h for the definition of the 'eFontIndex' enum.
+    CTextFont*   GetFont(eFontIndex idx);       // returns a D3DX font handle for drawing text; see shell_defines.h for the definition of the 'eFontIndex' enum.
     int          GetFontHeight(eFontIndex idx); // returns the height of the font, in pixels; see shell_defines.h for the definition of the 'eFontIndex' enum.
     CTextManager m_text;
 protected:
@@ -156,14 +156,14 @@ private:
     float        m_fps;             // current estimate of frames per second
     HINSTANCE    m_hInstance;       // handle to application instance
     DXContext*   m_lpDX;            // pointer to DXContext object
-    wchar_t      m_szPluginsDirPath[MAX_PATH];  // usually 'c:\\program files\\winamp\\plugins\\'
-    wchar_t      m_szConfigIniFile[MAX_PATH];   // usually 'c:\\program files\\winamp\\plugins\\something.ini' - filename is determined from identifiers in 'defines.h'
-	char         m_szConfigIniFileA[MAX_PATH];   // usually 'c:\\program files\\winamp\\plugins\\something.ini' - filename is determined from identifiers in 'defines.h'
+    wchar_t      m_szPluginsDirPath[MAX_PATH];  // directory of the host module
+    wchar_t      m_szConfigIniFile[MAX_PATH];   // config file beside the host module
+	char         m_szConfigIniFileA[MAX_PATH];   // ANSI form of m_szConfigIniFile
 
     // FONTS
 	IDirect3DTexture9* m_lpDDSText;
-    LPD3DXFONT   m_d3dx_font[NUM_BASIC_FONTS + NUM_EXTRA_FONTS];
-    LPD3DXFONT   m_d3dx_desktop_font;
+    CTextFont*   m_d3dx_font[NUM_BASIC_FONTS + NUM_EXTRA_FONTS];
+    CTextFont*   m_d3dx_desktop_font;
     HFONT        m_font[NUM_BASIC_FONTS + NUM_EXTRA_FONTS];
     HFONT        m_font_desktop;
 

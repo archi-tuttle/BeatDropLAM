@@ -984,9 +984,9 @@ void CPlugin::MyPreInitialize()
     m_nMaxBytes  = 16000000;
 
     #ifdef _DEBUG
-        m_dwShaderFlags = D3DXSHADER_DEBUG|(1<<16);
+        m_dwShaderFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
     #else
-        m_dwShaderFlags = (1<<16);//D3DXSHADER_SKIPOPTIMIZATION|D3DXSHADER_NO_PRESHADER;
+        m_dwShaderFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3 | D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
     #endif
     //m_pFragmentLinker = NULL;
     //m_pCompiledFragments = NULL;
@@ -1124,7 +1124,7 @@ void CPlugin::MyPreInitialize()
     std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
     std::wstring dir = std::wstring(buffer).substr(0, pos);
 
-    swprintf(m_szMilkdrop2Path, L"%s\\plugins\\%s", dir.c_str(), SUBDIR);
+    swprintf(m_szMilkdrop2Path, L"%s\\", dir.c_str());
     swprintf(m_szPresetDir, L"%spresets\\", m_szMilkdrop2Path);
 
     // note that the config dir can be under Program Files or Application Data!!
@@ -1220,6 +1220,17 @@ void CPlugin::MyReadConfig()
     // --------
 
 	GetPrivateProfileStringW(L"settings",L"szPresetDir",m_szPresetDir,m_szPresetDir,sizeof(m_szPresetDir),pIni);
+
+    std::wstring savedPresetDir(m_szPresetDir);
+    while (!savedPresetDir.empty() && (savedPresetDir.back() == L'\\' || savedPresetDir.back() == L'/'))
+        savedPresetDir.pop_back();
+    std::wstring legacyPresetDir(m_szMilkdrop2Path);
+    legacyPresetDir += L"plugins\\Milkdrop2\\presets";
+    if (_wcsicmp(savedPresetDir.c_str(), legacyPresetDir.c_str()) == 0)
+    {
+        swprintf(m_szPresetDir, L"%spresets\\", m_szMilkdrop2Path);
+        WritePrivateProfileStringW(L"settings", L"szPresetDir", m_szPresetDir, pIni);
+    }
 
 	ReadCustomMessages();
 
@@ -2156,7 +2167,8 @@ int CPlugin::AllocateMyDX9Stuff()
 
 	/*if (m_bFixSlowText && !m_bSeparateTextWindow)
 	{
-        if (D3DXCreateTexture(GetDevice(), GetWidth(), GetHeight(), 1, D3DUSAGE_RENDERTARGET, GetBackBufFormat(), D3DPOOL_DEFAULT, &m_lpDDSText) != D3D_OK)
+        if (GetDevice()->CreateTexture(GetWidth(), GetHeight(), 1, D3DUSAGE_RENDERTARGET,
+            GetBackBufFormat(), D3DPOOL_DEFAULT, &m_lpDDSText, NULL) != D3D_OK)
 		{
             char buf[2048];
 			dumpmsg("Init: -WARNING-:");
@@ -2189,7 +2201,8 @@ int CPlugin::AllocateMyDX9Stuff()
 
 		do
 		{
-			hr = D3DXCreateTexture(GetDevice(), m_nTitleTexSizeX, m_nTitleTexSizeY, 1, D3DUSAGE_RENDERTARGET, GetBackBufFormat(), D3DPOOL_DEFAULT, &m_lpDDSTitle);
+            hr = GetDevice()->CreateTexture(m_nTitleTexSizeX, m_nTitleTexSizeY, 1,
+                D3DUSAGE_RENDERTARGET, GetBackBufFormat(), D3DPOOL_DEFAULT, &m_lpDDSTitle, NULL);
 			if (hr != D3D_OK)
 			{
 				if (m_nTitleTexSizeY < m_nTitleTexSizeX)
@@ -2234,7 +2247,7 @@ int CPlugin::AllocateMyDX9Stuff()
         return false;
     }
 
-	if (D3DXCreateFontW(	GetDevice(),
+	if (CreateTextFont(	GetDevice(),
 						songtitle_font_size,
 						0,
 						m_fontinfo[SONGTITLE_FONT].bBold ? 900 : 400,
@@ -2919,17 +2932,17 @@ bool PickRandomTexture(const wchar_t* prefix, wchar_t* szRetTextureFilename)  //
     return true;
 }
 
-void CShaderParams::CacheParams(LPD3DXCONSTANTTABLE pCT, bool bHardErrors)
+void CShaderParams::CacheParams(ShaderConstantTable* pCT, bool bHardErrors)
 {
     Clear();
 
     if (!pCT)
         return;
 
-    D3DXCONSTANTTABLE_DESC d;
+    ShaderConstantTableDesc d;
     pCT->GetDesc(&d);
 
-    D3DXCONSTANT_DESC cd;
+    ShaderConstantDesc cd;
 
     #define MAX_RAND_TEX 16
     std::wstring RandTexName[MAX_RAND_TEX];
@@ -2937,14 +2950,14 @@ void CShaderParams::CacheParams(LPD3DXCONSTANTTABLE pCT, bool bHardErrors)
     // pass 1: find all the samplers (and texture bindings).
     for (UINT i=0; i<d.Constants; i++)
     {
-        D3DXHANDLE h = pCT->GetConstant(NULL, i);
+        ShaderConstantHandle h = pCT->GetConstant(NULL, i);
         unsigned int count = 1;
         pCT->GetConstantDesc(h, &cd, &count);
 
         // cd.Name          = VS_Sampler
-        // cd.RegisterSet   = D3DXRS_SAMPLER
+        // cd.RegisterSet   = SHADER_CONSTANT_SAMPLER
         // cd.RegisterIndex = 3
-        if (cd.RegisterSet == D3DXRS_SAMPLER && cd.RegisterIndex >= 0 && cd.RegisterIndex < sizeof(m_texture_bindings)/sizeof(m_texture_bindings[0]))
+        if (cd.RegisterSet == SHADER_CONSTANT_SAMPLER && cd.RegisterIndex >= 0 && cd.RegisterIndex < sizeof(m_texture_bindings)/sizeof(m_texture_bindings[0]))
         {
             assert(m_texture_bindings[cd.RegisterIndex].texptr == NULL);
 
@@ -3162,26 +3175,13 @@ void CShaderParams::CacheParams(LPD3DXCONSTANTTABLE pCT, bool bHardErrors)
                             if (GetFileAttributesW(szFilename) == 0xFFFFFFFF)
                               continue;
                         }
-                        D3DXIMAGE_INFO desc;
-
                         // keep trying to load it - if it fails due to memory, evict something and try again.
                         while (1)
                         {
-                            HRESULT hr = D3DXCreateTextureFromFileExW(g_plugin.GetDevice(),
-                                                                   szFilename,
-                                                                   D3DX_DEFAULT_NONPOW2, // w
-                                                                   D3DX_DEFAULT_NONPOW2, // h
-                                                                   D3DX_DEFAULT,    // # mip levels to gen - all
-                                                                   0,  // usage flags
-                                                                   D3DFMT_UNKNOWN,
-                                                                   D3DPOOL_DEFAULT,
-                                                                   D3DX_DEFAULT,     //filter
-                                                                   D3DX_DEFAULT,     //mipfilter
-                                                                   0,                // color key
-                                                                   &desc,
-                                                                   NULL,             //palette
-                                                                   (IDirect3DTexture9**)&x.texptr
-                                                                     );
+                                                        UINT textureWidth = 0;
+                                                        UINT textureHeight = 0;
+                                                        HRESULT hr = LoadTextureFromFileW(g_plugin.GetDevice(), szFilename,
+                                                                0xffffffff, (IDirect3DTexture9**)&x.texptr, &textureWidth, &textureHeight);
                             if (hr==D3DERR_OUTOFVIDEOMEMORY || hr==E_OUTOFMEMORY)
                             {
                                 // out of memory - try evicting something old and/or big
@@ -3191,14 +3191,12 @@ void CShaderParams::CacheParams(LPD3DXCONSTANTTABLE pCT, bool bHardErrors)
 
                             if (hr==D3D_OK)
                             {
-                                x.w = desc.Width;
-                                x.h = desc.Height;
-                                x.d = desc.Depth;
+                                x.w = textureWidth;
+                                x.h = textureHeight;
+                                x.d = 1;
                                 x.bEvictable    = true;
                                 x.nAge          = g_plugin.m_nPresetsLoadedTotal;
-                                int nPixels = desc.Width*desc.Height*max(1,desc.Depth);
-                                int BitsPerPixel = GetDX9TexFormatBitsPerPixel(desc.Format);
-                                x.nSizeInBytes  =  nPixels*BitsPerPixel/8 + 16384;  //plus some overhead
+                                x.nSizeInBytes  = static_cast<int>(textureWidth * textureHeight * 4ULL) + 16384;
                             }
                             break;
                         }
@@ -3227,13 +3225,13 @@ void CShaderParams::CacheParams(LPD3DXCONSTANTTABLE pCT, bool bHardErrors)
     // pass 2: bind all the float4's.  "texsize_XYZ" params will be filled out via knowledge of loaded texture sizes.
     for (i=0; i<d.Constants; i++)
     {
-        D3DXHANDLE h = pCT->GetConstant(NULL, i);
+        ShaderConstantHandle h = pCT->GetConstant(NULL, i);
         unsigned int count = 1;
         pCT->GetConstantDesc(h, &cd, &count);
 
-        if (cd.RegisterSet == D3DXRS_FLOAT4)
+        if (cd.RegisterSet == SHADER_CONSTANT_FLOAT4)
         {
-            if (cd.Class == D3DXPC_MATRIX_COLUMNS)
+            if (cd.Class == SHADER_CONSTANT_MATRIX_COLUMNS)
             {
                 if      (!strcmp(cd.Name, "rot_s1" )) rot_mat[0]  = h;
                 else if (!strcmp(cd.Name, "rot_s2" )) rot_mat[1]  = h;
@@ -3260,7 +3258,7 @@ void CShaderParams::CacheParams(LPD3DXCONSTANTTABLE pCT, bool bHardErrors)
                 else if (!strcmp(cd.Name, "rot_rand3")) rot_mat[22] = h;
                 else if (!strcmp(cd.Name, "rot_rand4")) rot_mat[23] = h;
             }
-            else if (cd.Class == D3DXPC_VECTOR)
+            else if (cd.Class == SHADER_CONSTANT_VECTOR)
             {
                 if      (!strcmp(cd.Name, "rand_frame"))  rand_frame  = h;
                 else if (!strcmp(cd.Name, "rand_preset")) rand_preset = h;
@@ -3436,9 +3434,9 @@ bool CPlugin::LoadShaders(PShaderSet* sh, CState* pState, bool bTick)
 
 /*
 bool CPlugin::LoadShaderFromFile( char* szFile, char* szFn, char* szProfile,
-                                  LPD3DXCONSTANTTABLE* ppConstTable, void** ppShader )
+                                  ShaderConstantTable** ppConstTable, void** ppShader )
 {
-    LPD3DXBUFFER pShaderByteCode;
+    ID3DBlob* pShaderByteCode = NULL;
     char buf[32768];
 
     if (D3D_OK != D3DXCompileShaderFromFile(
@@ -3486,7 +3484,7 @@ bool CPlugin::LoadShaderFromFile( char* szFile, char* szFn, char* szProfile,
 */
 
 bool CPlugin::LoadShaderFromMemory( const char* szOrigShaderText, char* szFn, char* szProfile,
-                                    LPD3DXCONSTANTTABLE* ppConstTable, void** ppShader, int shaderType, bool bHardErrors )
+                                    ShaderConstantTable** ppConstTable, void** ppShader, int shaderType, bool bHardErrors )
 {
     const char szWarpDefines[] = "#define rad _rad_ang.x\n"
                                  "#define ang _rad_ang.y\n"
@@ -3512,7 +3510,7 @@ bool CPlugin::LoadShaderFromMemory( const char* szOrigShaderText, char* szFn, ch
     default:           lstrcpy(szWhichShader, "(unknown)"); break;
     }
 
-    LPD3DXBUFFER pShaderByteCode;
+    ID3DBlob* pShaderByteCode = NULL;
     wchar_t title[64];
 
     *ppShader = NULL;
@@ -3655,17 +3653,9 @@ bool CPlugin::LoadShaderFromMemory( const char* szOrigShaderText, char* szFn, ch
 	bool failed=false;
     int len = lstrlen(szShaderText);
 
-    HRESULT hresult = D3DXCompileShader(
-        szShaderText,
-        len,
-        NULL,//CONST D3DXMACRO* pDefines,
-        NULL,//LPD3DXINCLUDE pInclude,
-        szFn,
-        szProfile,
-        m_dwShaderFlags,
-        &pShaderByteCode,
-        &m_pShaderCompileErrors,
-        ppConstTable);
+    SafeRelease(m_pShaderCompileErrors);
+    HRESULT hresult = D3DCompile(szShaderText, len, NULL, NULL, NULL, szFn,
+        szProfile, m_dwShaderFlags, 0, &pShaderByteCode, &m_pShaderCompileErrors);
 
     if (D3D_OK != hresult)
 		{
@@ -3675,10 +3665,12 @@ bool CPlugin::LoadShaderFromMemory( const char* szOrigShaderText, char* szFn, ch
 		if (failed && !strcmp(szProfile, "ps_2_a"))
 		{
 			SafeRelease(m_pShaderCompileErrors);
-			if (D3D_OK == D3DXCompileShader(szShaderText, len, NULL, NULL, szFn,
-				"ps_2_b", m_dwShaderFlags, &pShaderByteCode, &m_pShaderCompileErrors, ppConstTable))
+            SafeRelease(pShaderByteCode);
+            if (SUCCEEDED(D3DCompile(szShaderText, len, NULL, NULL, NULL, szFn,
+                "ps_2_b", m_dwShaderFlags, 0, &pShaderByteCode, &m_pShaderCompileErrors)))
 			{
 				failed=false;
+                lstrcpy(szProfile, "ps_2_b");
 			}
 		}
 
@@ -3686,10 +3678,21 @@ bool CPlugin::LoadShaderFromMemory( const char* szOrigShaderText, char* szFn, ch
 		{
 			wchar_t temp[1024];
 			swprintf(temp, wasabiApiLangString(IDS_ERROR_COMPILING_X_X_SHADER), szProfile, szWhichShader);
-			if (m_pShaderCompileErrors && m_pShaderCompileErrors->GetBufferSize() < sizeof(temp) - 256)
+            if (m_pShaderCompileErrors && m_pShaderCompileErrors->GetBufferSize() < sizeof(temp) - 256)
 			{
 				lstrcatW(temp, L"\n\n");
-				lstrcatW(temp, AutoWide((char*)m_pShaderCompileErrors->GetBufferPointer()));
+                const int messageLength = MultiByteToWideChar(CP_UTF8, 0,
+                    static_cast<const char*>(m_pShaderCompileErrors->GetBufferPointer()),
+                    static_cast<int>(m_pShaderCompileErrors->GetBufferSize()), NULL, 0);
+                if (messageLength > 0 && messageLength < 512)
+                {
+                    wchar_t compileMessage[512];
+                    MultiByteToWideChar(CP_UTF8, 0,
+                        static_cast<const char*>(m_pShaderCompileErrors->GetBufferPointer()),
+                        static_cast<int>(m_pShaderCompileErrors->GetBufferSize()), compileMessage, messageLength);
+                    compileMessage[messageLength] = L'\0';
+                    lstrcatW(temp, compileMessage);
+                }
 			}
 			SafeRelease(m_pShaderCompileErrors);
 			dumpmsg(temp);
@@ -3700,6 +3703,16 @@ bool CPlugin::LoadShaderFromMemory( const char* szOrigShaderText, char* szFn, ch
 			}
 			return false;
 		}
+
+        SafeRelease(m_pShaderCompileErrors);
+        HRESULT tableResult = CreateShaderConstantTable(szProfile[0] == 'v',
+            pShaderByteCode->GetBufferPointer(), pShaderByteCode->GetBufferSize(), ppConstTable);
+        if (FAILED(tableResult))
+        {
+            pShaderByteCode->Release();
+            OutputDebugStringW(L"D3DCompile did not produce a supported D3D9 constant table.\n");
+            return false;
+        }
 
     HRESULT hr = 1;
     if (szProfile[0] == 'v')
@@ -3713,6 +3726,11 @@ bool CPlugin::LoadShaderFromMemory( const char* szOrigShaderText, char* szFn, ch
 
     if (hr != D3D_OK)
     {
+        if (*ppConstTable)
+        {
+            (*ppConstTable)->Release();
+            *ppConstTable = NULL;
+        }
 		wchar_t temp[512];
         wasabiApiLangString(IDS_ERROR_CREATING_SHADER,temp,sizeof(temp));
 		dumpmsg(temp);
@@ -4137,7 +4155,7 @@ void CPlugin::MyRenderUI(
 
     RECT r = {0};
 	wchar_t buf[512] = {0};
-    LPD3DXFONT pFont = GetFont(DECORATIVE_FONT);
+    CTextFont* pFont = GetFont(DECORATIVE_FONT);
     int h = GetFontHeight(DECORATIVE_FONT);
 
     if (!pFont)
@@ -7332,22 +7350,11 @@ void CPlugin::SeekToPreset(wchar_t cStartChar)
 
 void CPlugin::FindValidPresetDir()
 {
+    const DWORD attributes = GetFileAttributesW(m_szPresetDir);
+    if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY))
+        return;
+
     swprintf(m_szPresetDir, L"%spresets\\", m_szMilkdrop2Path );
-    if (GetFileAttributesW(m_szPresetDir) != -1)
-        return;
-    lstrcpyW(m_szPresetDir, m_szMilkdrop2Path);
-    if (GetFileAttributesW(m_szPresetDir) != -1)
-        return;
-    lstrcpyW(m_szPresetDir, GetPluginsDirPath());
-    if (GetFileAttributesW(m_szPresetDir) != -1)
-        return;
-    lstrcpyW(m_szPresetDir, L"c:\\program files\\winamp\\");  //getting desperate here
-    if (GetFileAttributesW(m_szPresetDir) != -1)
-        return;
-    lstrcpyW(m_szPresetDir, L"c:\\program files\\");  //getting desperate here
-    if (GetFileAttributesW(m_szPresetDir) != -1)
-        return;
-    lstrcpyW(m_szPresetDir, L"c:\\");
 }
 
 char* NextLine(char* p)
@@ -7389,7 +7396,7 @@ static unsigned int WINAPI __UpdatePresetList(void* lpVoid)
     EnterCriticalSection(&g_cs);
 retry:
 
-	// make sure the path exists; if not, go to winamp plugins dir
+    // Restore the executable-relative default if the selected preset directory is missing.
 	if (GetFileAttributesW(g_plugin.m_szPresetDir) == -1)
     {
         //FIXME...
@@ -7418,7 +7425,7 @@ retry:
 	    //if( (hFile = _findfirst(szMask, &c_file )) != -1L )		// note: returns filename -without- path
 	    if( (h = FindFirstFileW(g_plugin.m_szUpdatePresetMask, &fd )) == INVALID_HANDLE_VALUE )		// note: returns filename -without- path
         {
-            // --> revert back to plugins dir
+            // Retry the executable-relative default preset directory.
             wchar_t buf[1024];
 		    swprintf(buf, wasabiApiLangString(IDS_ERROR_NO_PRESET_FILES_OR_DIRS_FOUND_IN_X), g_plugin.m_szPresetDir);
             g_plugin.AddError(buf, 4.0f, ERR_MISC, true);
@@ -7629,7 +7636,7 @@ retry:
     if (g_plugin.m_bPresetListReady && g_plugin.m_nPresets == 0)
     {
         // no presets OR directories found - weird - but it happens.
-        // --> revert back to plugins dir
+        // Retry the executable-relative default preset directory.
         wchar_t buf[1024];
 		swprintf(buf, wasabiApiLangString(IDS_ERROR_NO_PRESET_FILES_OR_DIRS_FOUND_IN_X), g_plugin.m_szPresetDir);
         g_plugin.AddError(buf, 4.0f, ERR_MISC, true);

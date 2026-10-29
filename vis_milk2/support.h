@@ -30,13 +30,14 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __NULLSOFT_DX9_EXAMPLE_PLUGIN_SUPPORT_H__
 #define __NULLSOFT_DX9_EXAMPLE_PLUGIN_SUPPORT_H__ 1
 
-#include <d3dx9.h>
+#include <d3d9.h>
+#include <DirectXMath.h>
 
-void MakeWorldMatrix( D3DXMATRIX* pOut,
+void MakeWorldMatrix( D3DMATRIX* pOut,
                       float xpos, float ypos, float zpos,
                       float sx,   float sy,   float sz,
                       float pitch, float yaw, float roll);
-void MakeProjectionMatrix( D3DXMATRIX* pOut,
+void MakeProjectionMatrix( D3DMATRIX* pOut,
                            const float near_plane, // Distance to near clipping plane
                            const float far_plane,  // Distance to far clipping plane
                            const float fov_horiz,  // Horizontal field of view angle, in radians
@@ -48,9 +49,9 @@ void PrepareFor3DDrawing(
         float fov_in_degrees,
         float near_clip,
         float far_clip,
-        D3DXVECTOR3* pvEye,
-        D3DXVECTOR3* pvLookat,
-        D3DXVECTOR3* pvUp
+        DirectX::XMFLOAT3* pvEye,
+        DirectX::XMFLOAT3* pvLookat,
+        DirectX::XMFLOAT3* pvUp
     );
 void PrepareFor2DDrawing(IDirect3DDevice9 *pDevice);
 

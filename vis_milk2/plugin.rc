@@ -7,7 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include <windows.h>
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -32,7 +32,7 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""afxres.h""\r\n"
+    "#include ""windows.h""\r\n"
     "\0"
 END
 
@@ -233,7 +233,7 @@ BEGIN
     IDS_ERROR_CREATING_DOUBLE_SIZED_GDI_TITLE_FONT 
                             "Error creating double-sized GDI title font"
     IDS_ERROR_CREATING_DOUBLE_SIZED_D3DX_TITLE_FONT 
-                            "Error creating double-sized d3dx title font"
+                            "Error creating double-sized title font"
     IDS_RATING              "Rating"
     IDS_DISABLED            "[disabled] "
     IDS_ARE_YOU_SURE_YOU_WANT_TO_DELETE_PRESET 
@@ -800,7 +800,7 @@ BEGIN
     IDS_HELP_MINIMIZE_WINAMP_HELP 
                             "Enable this if you can sometimes see the Winamp window flickering\nthrough, when you run the plug-in fullscreen.  Enabling this option\nwill force the Winamp window to minimize whenever the plug-in goes\nfullscreen on the same monitor that the Winamp window is on.\nThe Winamp window will be restored as soon as the plug-in returns\nfrom fullscreen mode.\n\nNote that this also applies for 'fake' fullscreen mode (as well as 'real'\nfullscreen mode).\n\nKeep in mind that when running graphically demanding applications\n(such as this plug-in), it's always good to minimize (or close) as many\nother applications as possible, even if they appear to be idle."
     IDS_DIRECTX_MISSING_OR_CORRUPT_TEXT 
-                            "Failed to initialize DirectX 9.0 or later.\nMilkdrop requires d3dx9_31.dll to be installed.\n\nWould you like to be taken to:\nhttp://www.microsoft.com/download/details.aspx?id=35,\nwhere you can update DirectX 9.0?\n"
+                            "Failed to initialize Direct3D 9. Check that a compatible graphics driver is installed."
     IDS_PARENT_DIRECTORY    "parent directory"
     IDS_RAND_TITLE          "Time between random song title animation"
     IDS_RAND_MSG            "Time between random custom messages"
@@ -1019,7 +1019,7 @@ BEGIN
     IDS_ERROR_CREATING_VJ_WINDOW "Error creating VJ window"
     IDS_ERROR_CREATING_D3D_DEVICE_FOR_VJ_MODE 
                             "Error creating D3D device for VJ mode"
-    IDS_ERROR_CREATING_D3DX_FONTS "Error creating D3DX fonts"
+    IDS_ERROR_CREATING_D3DX_FONTS "Error creating Windows text fonts"
     IDS_UNABLE_TO_INIT_DXCONTEXT 
                             "Unable to initialize DXContext;\nprobably out of memory."
     IDS_TO_FREE_UP_SOME_MEMORY_RESTART_WINAMP_THEN_GO_TO_CONFIG 

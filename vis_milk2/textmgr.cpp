@@ -116,7 +116,7 @@ void CTextManager::DrawBox(LPRECT pRect, DWORD boxColor)
     }
 }
 
-int CTextManager::DrawText(LPD3DXFONT pFont, char* szText, RECT* pRect, DWORD flags, DWORD color, bool bBox, DWORD boxColor)
+int CTextManager::DrawText(CTextFont* pFont, char* szText, RECT* pRect, DWORD flags, DWORD color, bool bBox, DWORD boxColor)
 {
     // these aren't supported by D3DX9:
     flags &= ~(DT_WORD_ELLIPSIS | DT_END_ELLIPSIS | DT_NOPREFIX);
@@ -168,7 +168,7 @@ int CTextManager::DrawText(LPD3DXFONT pFont, char* szText, RECT* pRect, DWORD fl
     return h;
 }
 
-int CTextManager::DrawTextW(LPD3DXFONT pFont, wchar_t* szText, RECT* pRect, DWORD flags, DWORD color, bool bBox, DWORD boxColor)
+int CTextManager::DrawTextW(CTextFont* pFont, wchar_t* szText, RECT* pRect, DWORD flags, DWORD color, bool bBox, DWORD boxColor)
 {
     // these aren't supported by D3DX9:
     flags &= ~(DT_WORD_ELLIPSIS | DT_END_ELLIPSIS | DT_NOPREFIX);
@@ -234,9 +234,11 @@ void CTextManager::DrawNow()
         
     if (m_nMsg[m_b] > 0 || m_nMsg[1-m_b] > 0)  // second condition req'd for clearing text in VJ mode
     {
-        D3DXMATRIX Ortho2D;    
-        D3DXMatrixOrthoLH(&Ortho2D, 2.0f, -2.0f, 0.0f, 1.0f);
-        m_lpDevice->SetTransform(D3DTS_PROJECTION, &Ortho2D);
+        int i = 0;
+        int j = 0;
+        DirectX::XMFLOAT4X4 Ortho2D;
+        DirectX::XMStoreFloat4x4(&Ortho2D, DirectX::XMMatrixOrthographicLH(2.0f, -2.0f, 0.0f, 1.0f));
+        m_lpDevice->SetTransform(D3DTS_PROJECTION, reinterpret_cast<const D3DMATRIX*>(&Ortho2D));
 
         #define NUM_DIRTY_RECTS 3
         RECT dirty_rect[NUM_DIRTY_RECTS];
@@ -438,7 +440,7 @@ void CTextManager::DrawNow()
 	        WFVERTEX v3[4];
             if (bRedrawText==2)
             {
-                DWORD clearcolor = m_msg[m_b][j].bgColor;//0xFF000000;// | ((rand()%32)<<16) | ((rand()%32)<<8) | ((rand()%32));
+                DWORD clearcolor = 0xFF000000;
                 for (int i=0; i<4; i++)
                 {
                     v3[i].x = -1.0f + 2.0f*(i%2);

@@ -302,34 +302,10 @@ void DownloadDirectX(HWND hwnd)
 
 void MissingDirectX(HWND hwnd)
 {
-    // DIRECTX MISSING OR CORRUPT -> PROMPT TO GO TO WEB.
 	wchar_t title[128];
-    int ret = MessageBoxW(hwnd,
-        #ifndef D3D_SDK_VERSION
-            --- error; you need to #include <d3d9.h> ---
-        #endif
-        #if (D3D_SDK_VERSION==120)
-            // plugin was *built* using the DirectX 9.0 sdk, therefore,
-            // the dx9.0 runtime is missing or corrupt
-            "Failed to initialize DirectX 9.0 or later.\n"
-            "Milkdrop requires d3dx9_31.dll to be installed.\n"
-            "\n"
-            "Would you like to be taken to:\n"
-			"http://www.microsoft.com/download/details.aspx?id=35,\n"
-            "where you can update DirectX 9.0?\n"
-            XXXXXXX
-        #else
-            // plugin was *built* using some other version of the DirectX9 sdk, such as
-            // 9.1b; therefore, we don't know exactly what version to tell them they need
-            // to install; so we ask them to go get the *latest* version.
-            wasabiApiLangString(IDS_DIRECTX_MISSING_OR_CORRUPT_TEXT)
-        #endif
-        ,
+	MessageBoxW(hwnd, wasabiApiLangString(IDS_DIRECTX_MISSING_OR_CORRUPT_TEXT),
 		wasabiApiLangString(IDS_DIRECTX_MISSING_OR_CORRUPT, title, 128),
-		MB_YESNO|MB_SETFOREGROUND|MB_TOPMOST|MB_TASKMODAL);
-
-    if (ret==IDYES)
-        DownloadDirectX(hwnd);
+		MB_OK|MB_SETFOREGROUND|MB_TOPMOST|MB_TASKMODAL);
 }
 
 bool CheckForMMX()

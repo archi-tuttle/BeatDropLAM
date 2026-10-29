@@ -317,7 +317,7 @@ bool CPlugin::RenderStringToTitleTexture()	// m_szSongMessage
         // custom msg -> pick font to use that will best fill the texture
 
         HFONT gdi_font = NULL;
-        LPD3DXFONT d3dx_font = NULL;
+        CTextFont* d3dx_font = NULL;
 
         int lo = 0;
 	    int hi = sizeof(g_title_font_sizes)/sizeof(int) - 1;
@@ -340,7 +340,7 @@ bool CPlugin::RenderStringToTitleTexture()	// m_szSongMessage
             if (gdi_font)
             {
                 // create new d3dx font at 'mid' size:
-                if (D3DXCreateFontW(
+                if (CreateTextFont(
 					    lpDevice,
 						g_title_font_sizes[mid],
 						0,
@@ -776,7 +776,7 @@ void CPlugin::RenderFrame(int bRedraw)
 
     if (!bRedraw)
     {
-        m_rand_frame = D3DXVECTOR4(FRAND, FRAND, FRAND, FRAND);
+        m_rand_frame = DirectX::XMFLOAT4(FRAND, FRAND, FRAND, FRAND);
 
 	    // randomly change the preset, if it's time
 	    if (m_fNextPresetTime < GetTime())
@@ -1599,12 +1599,12 @@ void CPlugin::BlurPasses()
             lpDevice->SetPixelShader (m_BlurShaders[i%2].ps.ptr);
 
             // set constants
-            LPD3DXCONSTANTTABLE pCT = m_BlurShaders[i%2].ps.CT;
-            D3DXHANDLE* h = m_BlurShaders[i%2].ps.params.const_handles;
+            ShaderConstantTable* pCT = m_BlurShaders[i%2].ps.CT;
+            ShaderConstantHandle* h = m_BlurShaders[i%2].ps.params.const_handles;
 
             int srcw = (i==0) ? GetWidth() : m_nBlurTexW[i-1];
             int srch = (i==0) ? GetHeight() : m_nBlurTexH[i-1];
-            D3DXVECTOR4 srctexsize = D3DXVECTOR4( (float)srcw, (float)srch, 1.0f/(float)srcw, 1.0f/(float)srch );
+            DirectX::XMFLOAT4 srctexsize = DirectX::XMFLOAT4( (float)srcw, (float)srch, 1.0f/(float)srcw, 1.0f/(float)srch );
 
             float fscale_now = fscale[i/2];
             float fbias_now  = fbias[i/2];
@@ -1629,9 +1629,9 @@ void CPlugin::BlurPasses()
                 //float4 _c3; // scale, bias, w_div, 0
                 //-------------------------------------
                 if (h[0]) pCT->SetVector( lpDevice, h[0], &srctexsize );
-                if (h[1]) pCT->SetVector( lpDevice, h[1], &D3DXVECTOR4( w1,w2,w3,w4 ));
-                if (h[2]) pCT->SetVector( lpDevice, h[2], &D3DXVECTOR4( d1,d2,d3,d4 ));
-                if (h[3]) pCT->SetVector( lpDevice, h[3], &D3DXVECTOR4( fscale_now,fbias_now,w_div,0));
+                if (h[1]) pCT->SetVector( lpDevice, h[1], &DirectX::XMFLOAT4( w1,w2,w3,w4 ));
+                if (h[2]) pCT->SetVector( lpDevice, h[2], &DirectX::XMFLOAT4( d1,d2,d3,d4 ));
+                if (h[3]) pCT->SetVector( lpDevice, h[3], &DirectX::XMFLOAT4( fscale_now,fbias_now,w_div,0));
             }
             else
             {
@@ -1648,15 +1648,15 @@ void CPlugin::BlurPasses()
                 //float4 _c6; // w_div, edge_darken_c1, edge_darken_c2, edge_darken_c3
                 //-------------------------------------
                 if (h[0]) pCT->SetVector( lpDevice, h[0], &srctexsize );
-                if (h[5]) pCT->SetVector( lpDevice, h[5], &D3DXVECTOR4( w1,w2,d1,d2 ));
+                if (h[5]) pCT->SetVector( lpDevice, h[5], &DirectX::XMFLOAT4( w1,w2,d1,d2 ));
                 if (h[6])
                 {
                     // note: only do this first time; if you do it many times,
                     // then the super-blurred levels will have big black lines along the top & left sides.
                     if (i==1)
-                        pCT->SetVector( lpDevice, h[6], &D3DXVECTOR4( w_div,(1-edge_darken),edge_darken,5.0f )); //darken edges
+                        pCT->SetVector( lpDevice, h[6], &DirectX::XMFLOAT4( w_div,(1-edge_darken),edge_darken,5.0f )); //darken edges
                     else
-                        pCT->SetVector( lpDevice, h[6], &D3DXVECTOR4( w_div,1.0f,0.0f,5.0f )); // don't darken
+                        pCT->SetVector( lpDevice, h[6], &DirectX::XMFLOAT4( w_div,1.0f,0.0f,5.0f )); // don't darken
                 }
             }
 
@@ -3816,7 +3816,7 @@ void CPlugin::RestoreShaderParams()
 
 }
 
-void CPlugin::ApplyShaderParams(CShaderParams* p, LPD3DXCONSTANTTABLE pCT, CState* pState)
+void CPlugin::ApplyShaderParams(CShaderParams* p, ShaderConstantTable* pCT, CState* pState)
 {
     LPDIRECT3DDEVICE9 lpDevice = GetDevice();
 
@@ -3857,7 +3857,7 @@ void CPlugin::ApplyShaderParams(CShaderParams* p, LPD3DXCONSTANTTABLE pCT, CStat
     for (i=0; i<N; i++)
     {
         TexSizeParamInfo* q = &(p->texsize_params[i]);
-        pCT->SetVector( lpDevice, q->texsize_param, &D3DXVECTOR4((float)q->w,(float)q->h,1.0f/q->w,1.0f/q->h));
+        pCT->SetVector( lpDevice, q->texsize_param, &DirectX::XMFLOAT4((float)q->w,(float)q->h,1.0f/q->w,1.0f/q->h));
     }
 
     float time_since_preset_start = GetTime() - pState->GetPresetStartTime();
@@ -3880,44 +3880,44 @@ void CPlugin::ApplyShaderParams(CShaderParams* p, LPD3DXCONSTANTTABLE pCT, CStat
     // bind float4's
     if (p->rand_frame ) pCT->SetVector( lpDevice, p->rand_frame , &m_rand_frame );
     if (p->rand_preset) pCT->SetVector( lpDevice, p->rand_preset, &pState->m_rand_preset );
-    D3DXHANDLE* h = p->const_handles;
-    if (h[0]) pCT->SetVector( lpDevice, h[0], &D3DXVECTOR4( aspect_x, aspect_y, 1.0f/aspect_x, 1.0f/aspect_y ));
-    if (h[1]) pCT->SetVector( lpDevice, h[1], &D3DXVECTOR4(0, 0, 0, 0 ));
-    if (h[2]) pCT->SetVector( lpDevice, h[2], &D3DXVECTOR4(time_since_preset_start_wrapped, GetFps(), (float)GetFrame(), progress));
-    if (h[3]) pCT->SetVector( lpDevice, h[3], &D3DXVECTOR4(mysound.imm_rel[0], mysound.imm_rel[1], mysound.imm_rel[2], 0.3333f*(mysound.imm_rel[0], mysound.imm_rel[1], mysound.imm_rel[2]) ));
-    if (h[4]) pCT->SetVector( lpDevice, h[4], &D3DXVECTOR4(mysound.avg_rel[0], mysound.avg_rel[1], mysound.avg_rel[2], 0.3333f*(mysound.avg_rel[0], mysound.avg_rel[1], mysound.avg_rel[2]) ));
-    if (h[5]) pCT->SetVector( lpDevice, h[5], &D3DXVECTOR4( blur_max[0]-blur_min[0], blur_min[0], blur_max[1]-blur_min[1], blur_min[1] ));
-    if (h[6]) pCT->SetVector( lpDevice, h[6], &D3DXVECTOR4( blur_max[2]-blur_min[2], blur_min[2], blur_min[0], blur_max[0] ));
-    if (h[7]) pCT->SetVector( lpDevice, h[7], &D3DXVECTOR4((float)m_nTexSizeX, (float)m_nTexSizeY, 1.0f/(float)m_nTexSizeX, 1.0f/(float)m_nTexSizeY ));
-    if (h[8]) pCT->SetVector( lpDevice, h[8], &D3DXVECTOR4( 0.5f+0.5f*cosf(time* 0.329f+1.2f),
+    ShaderConstantHandle* h = p->const_handles;
+    if (h[0]) pCT->SetVector( lpDevice, h[0], &DirectX::XMFLOAT4( aspect_x, aspect_y, 1.0f/aspect_x, 1.0f/aspect_y ));
+    if (h[1]) pCT->SetVector( lpDevice, h[1], &DirectX::XMFLOAT4(0, 0, 0, 0 ));
+    if (h[2]) pCT->SetVector( lpDevice, h[2], &DirectX::XMFLOAT4(time_since_preset_start_wrapped, GetFps(), (float)GetFrame(), progress));
+    if (h[3]) pCT->SetVector( lpDevice, h[3], &DirectX::XMFLOAT4(mysound.imm_rel[0], mysound.imm_rel[1], mysound.imm_rel[2], 0.3333f*(mysound.imm_rel[0], mysound.imm_rel[1], mysound.imm_rel[2]) ));
+    if (h[4]) pCT->SetVector( lpDevice, h[4], &DirectX::XMFLOAT4(mysound.avg_rel[0], mysound.avg_rel[1], mysound.avg_rel[2], 0.3333f*(mysound.avg_rel[0], mysound.avg_rel[1], mysound.avg_rel[2]) ));
+    if (h[5]) pCT->SetVector( lpDevice, h[5], &DirectX::XMFLOAT4( blur_max[0]-blur_min[0], blur_min[0], blur_max[1]-blur_min[1], blur_min[1] ));
+    if (h[6]) pCT->SetVector( lpDevice, h[6], &DirectX::XMFLOAT4( blur_max[2]-blur_min[2], blur_min[2], blur_min[0], blur_max[0] ));
+    if (h[7]) pCT->SetVector( lpDevice, h[7], &DirectX::XMFLOAT4((float)m_nTexSizeX, (float)m_nTexSizeY, 1.0f/(float)m_nTexSizeX, 1.0f/(float)m_nTexSizeY ));
+    if (h[8]) pCT->SetVector( lpDevice, h[8], &DirectX::XMFLOAT4( 0.5f+0.5f*cosf(time* 0.329f+1.2f),
                                                               0.5f+0.5f*cosf(time* 1.293f+3.9f),
                                                               0.5f+0.5f*cosf(time* 5.070f+2.5f),
                                                               0.5f+0.5f*cosf(time*20.051f+5.4f)
         ));
-    if (h[9]) pCT->SetVector( lpDevice, h[9], &D3DXVECTOR4( 0.5f+0.5f*sinf(time* 0.329f+1.2f),
+    if (h[9]) pCT->SetVector( lpDevice, h[9], &DirectX::XMFLOAT4( 0.5f+0.5f*sinf(time* 0.329f+1.2f),
                                                               0.5f+0.5f*sinf(time* 1.293f+3.9f),
                                                               0.5f+0.5f*sinf(time* 5.070f+2.5f),
                                                               0.5f+0.5f*sinf(time*20.051f+5.4f)
         ));
-    if (h[10]) pCT->SetVector( lpDevice, h[10], &D3DXVECTOR4( 0.5f+0.5f*cosf(time*0.0050f+2.7f),
+    if (h[10]) pCT->SetVector( lpDevice, h[10], &DirectX::XMFLOAT4( 0.5f+0.5f*cosf(time*0.0050f+2.7f),
                                                                 0.5f+0.5f*cosf(time*0.0085f+5.3f),
                                                                 0.5f+0.5f*cosf(time*0.0133f+4.5f),
                                                                 0.5f+0.5f*cosf(time*0.0217f+3.8f)
         ));
-    if (h[11]) pCT->SetVector( lpDevice, h[11], &D3DXVECTOR4( 0.5f+0.5f*sinf(time*0.0050f+2.7f),
+    if (h[11]) pCT->SetVector( lpDevice, h[11], &DirectX::XMFLOAT4( 0.5f+0.5f*sinf(time*0.0050f+2.7f),
                                                                 0.5f+0.5f*sinf(time*0.0085f+5.3f),
                                                                 0.5f+0.5f*sinf(time*0.0133f+4.5f),
                                                                 0.5f+0.5f*sinf(time*0.0217f+3.8f)
         ));
-    if (h[12]) pCT->SetVector( lpDevice, h[12], &D3DXVECTOR4( mip_x, mip_y, mip_avg, 0 ));
-    if (h[13]) pCT->SetVector( lpDevice, h[13], &D3DXVECTOR4( blur_min[1], blur_max[1], blur_min[2], blur_max[2] ));
+    if (h[12]) pCT->SetVector( lpDevice, h[12], &DirectX::XMFLOAT4( mip_x, mip_y, mip_avg, 0 ));
+    if (h[13]) pCT->SetVector( lpDevice, h[13], &DirectX::XMFLOAT4( blur_min[1], blur_max[1], blur_min[2], blur_max[2] ));
 
     // write q vars
     int num_q_float4s = sizeof(p->q_const_handles)/sizeof(p->q_const_handles[0]);
     for (i=0; i<num_q_float4s; i++)
     {
         if (p->q_const_handles[i])
-            pCT->SetVector( lpDevice, p->q_const_handles[i], &D3DXVECTOR4(
+            pCT->SetVector( lpDevice, p->q_const_handles[i], &DirectX::XMFLOAT4(
                 (float)*pState->var_pf_q[i*4+0],
                 (float)*pState->var_pf_q[i*4+1],
                 (float)*pState->var_pf_q[i*4+2],
@@ -3929,18 +3929,14 @@ void CPlugin::ApplyShaderParams(CShaderParams* p, LPD3DXCONSTANTTABLE pCT, CStat
     {
         if (p->rot_mat[i])
         {
-            D3DXMATRIX mx,my,mz,mxlate,temp;
+			DirectX::XMFLOAT4X4 temp;
+			DirectX::XMStoreFloat4x4(&temp,
+				DirectX::XMMatrixRotationX(pState->m_rot_base[i].x + pState->m_rot_speed[i].x*time) *
+				DirectX::XMMatrixTranslation(pState->m_xlate[i].x, pState->m_xlate[i].y, pState->m_xlate[i].z) *
+				DirectX::XMMatrixRotationZ(pState->m_rot_base[i].z + pState->m_rot_speed[i].z*time) *
+				DirectX::XMMatrixRotationY(pState->m_rot_base[i].y + pState->m_rot_speed[i].y*time));
 
-            D3DXMatrixRotationX(&mx, pState->m_rot_base[i].x + pState->m_rot_speed[i].x*time);
-            D3DXMatrixRotationY(&my, pState->m_rot_base[i].y + pState->m_rot_speed[i].y*time);
-            D3DXMatrixRotationZ(&mz, pState->m_rot_base[i].z + pState->m_rot_speed[i].z*time);
-            D3DXMatrixTranslation(&mxlate, pState->m_xlate[i].x, pState->m_xlate[i].y, pState->m_xlate[i].z);
-
-            D3DXMatrixMultiply(&temp, &mx, &mxlate);
-            D3DXMatrixMultiply(&temp, &temp, &mz);
-            D3DXMatrixMultiply(&temp, &temp, &my);
-
-            pCT->SetMatrix(lpDevice, p->rot_mat[i], &temp);
+			pCT->SetMatrix(lpDevice, p->rot_mat[i], reinterpret_cast<const D3DMATRIX*>(&temp));
         }
     }
     // the last 4 are totally random, each frame
@@ -3948,18 +3944,20 @@ void CPlugin::ApplyShaderParams(CShaderParams* p, LPD3DXCONSTANTTABLE pCT, CStat
     {
         if (p->rot_mat[i])
         {
-            D3DXMATRIX mx,my,mz,mxlate,temp;
+			const float pitch = FRAND * 6.28f;
+			const float yaw = FRAND * 6.28f;
+			const float roll = FRAND * 6.28f;
+			const float translateX = FRAND;
+			const float translateY = FRAND;
+			const float translateZ = FRAND;
+			DirectX::XMFLOAT4X4 temp;
+			DirectX::XMStoreFloat4x4(&temp,
+				DirectX::XMMatrixRotationX(pitch) *
+				DirectX::XMMatrixTranslation(translateX, translateY, translateZ) *
+				DirectX::XMMatrixRotationZ(roll) *
+				DirectX::XMMatrixRotationY(yaw));
 
-            D3DXMatrixRotationX(&mx, FRAND * 6.28f);
-            D3DXMatrixRotationY(&my, FRAND * 6.28f);
-            D3DXMatrixRotationZ(&mz, FRAND * 6.28f);
-            D3DXMatrixTranslation(&mxlate, FRAND, FRAND, FRAND);
-
-            D3DXMatrixMultiply(&temp, &mx, &mxlate);
-            D3DXMatrixMultiply(&temp, &temp, &mz);
-            D3DXMatrixMultiply(&temp, &temp, &my);
-
-            pCT->SetMatrix(lpDevice, p->rot_mat[i], &temp);
+			pCT->SetMatrix(lpDevice, p->rot_mat[i], reinterpret_cast<const D3DMATRIX*>(&temp));
         }
     }
 }

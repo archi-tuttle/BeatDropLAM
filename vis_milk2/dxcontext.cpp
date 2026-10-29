@@ -39,7 +39,6 @@ DXContext::DXContext(LPDIRECT3DDEVICE9 device, D3DPRESENT_PARAMETERS* d3dpp, HWN
     m_lpDevice = device;
     m_d3dpp = d3dpp;
     m_hmod_d3d9 = NULL;
-    m_hmod_d3dx9 = NULL;
     m_zFormat = D3DFMT_UNKNOWN;
     for (int i = 0; i<MAX_DXC_ADAPTERS; i++)
         m_orig_windowed_mode_format[i] = D3DFMT_UNKNOWN;
