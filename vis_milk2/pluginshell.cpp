@@ -1890,7 +1890,7 @@ void CPluginShell::RenderBuiltInTextMsgs()
 			m_upper_left_corner_y += r.bottom-r.top + PLAYLIST_INNER_MARGIN*3;
 		}
 
-		// render 'Press F12 for Help' message in lower-right corner:
+		// render 'Press F1 for Help' message in lower-right corner:
 		if (_show_press_f1_NOW)
 		{
 			int dx = (int)(160.0f * powf(m_time/(float)(PRESS_F1_DUR), (float)(PRESS_F1_EXP)));
@@ -2065,10 +2065,12 @@ LRESULT CALLBACK CPluginShell::WindowProc(HWND hWnd, unsigned uMsg, WPARAM wPara
 	}
 
 	CPluginShell* p = (CPluginShell*)GetWindowLongPtr(hWnd,GWLP_USERDATA);
-	if (p)
-		return p->PluginShellWindowProc(hWnd, uMsg, wParam, lParam);
-	else
-		return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+
+	// if message is processed by Milkdrop, return 0 to indicate it has been handled
+	if (p != nullptr && p->PluginShellWindowProc(hWnd, uMsg, wParam, lParam) == 0) return 0;
+	
+	// fallthrough to default window procedure if message is not handled by Milkdrop
+	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
 
 LRESULT CPluginShell::PluginShellWindowProc(HWND hWnd, unsigned uMsg, WPARAM wParam, LPARAM lParam)
@@ -2105,8 +2107,7 @@ LRESULT CPluginShell::PluginShellWindowProc(HWND hWnd, unsigned uMsg, WPARAM wPa
 			m_lpDX->OnTrulyExiting();
 			PostQuitMessage(0);
 		}
-		return FALSE;
-		break;
+		return 0;
 
 	// benski> a little hack to get the window size correct. it seems to work
 	case WM_USER+555:
@@ -2160,131 +2161,14 @@ LRESULT CPluginShell::PluginShellWindowProc(HWND hWnd, unsigned uMsg, WPARAM wPa
 		m_lost_focus = 1;
 		break;
 
-	case WM_COMMAND: {
-		    // then allow the plugin to override any command:
-		    if (MyWindowProc(hWnd, uMsg, wParam, lParam) == 0)
-			    return 0;
-		}
-		break;
-
-	case WM_SYSCHAR:
-		if ((wParam=='k' || wParam=='K'))
-		{
-			OnAltK();
-			return 0;
-		}
-		break;
-
-	case WM_CHAR:
-		// if playlist is showing, steal p/j keys from the plugin:
-		if (m_show_playlist)
-		{
-			/* resync m_playlist_pos */
-		}
-
-		// then allow the plugin to override any keys:
-		if (MyWindowProc(hWnd, uMsg, wParam, lParam) == 0)
-			return 0;
-
-		switch (wParam)
-		{
-			// WINAMP PLAYBACK CONTROL KEYS:
-		case 'x':
-		case 'X':
-			/* play */
-			return 0;
-		case 'c':
-		case 'C':
-			/* pause */
-			return 0;
-		case 'v':
-		case 'V':
-			/* stop */
-			return 0;
-		case 'b':
-		case 'B':
-			/* next */
-			return 0;
-		case 's':
-		case 'S':
-			/* shuffle */
-			return 0;
-		case 'r':
-		case 'R':
-			/* repeat */
-			return 0;
-		}
-
-		return 0;
-
-	case WM_KEYUP:
-
-		// allow the plugin to override any keys:
-		if (MyWindowProc(hWnd, uMsg, wParam, lParam) == 0)
-			return 0;
-
-		return 0;
-		break;
-
 	case WM_KEYDOWN:
-		if (m_show_playlist)
-		{
-			switch (wParam)
-			{
-			case VK_UP:
-			{
-				int nRepeat = lParam & 0xFFFF;
-				if (GetKeyState(VK_SHIFT) & mask)
-					m_playlist_pos -= 10*nRepeat;
-				else
-					m_playlist_pos -= nRepeat;
-			}
-			return 0;
-
-			case VK_DOWN:
-			{
-				int nRepeat = lParam & 0xFFFF;
-				if (GetKeyState(VK_SHIFT) & mask)
-					m_playlist_pos += 10*nRepeat;
-                else
-					m_playlist_pos += nRepeat;
-			}
-			return 0;
-
-			case VK_HOME:
-				m_playlist_pos = 0;
-				return 0;
-
-			case VK_END:
-				return 0;
-
-			case VK_PRIOR:
-				if (GetKeyState(VK_SHIFT) & mask)
-					m_playlist_pageups += 10;
-				else
-					m_playlist_pageups++;
-				return 0;
-
-			case VK_NEXT:
-				if (GetKeyState(VK_SHIFT) & mask)
-					m_playlist_pageups -= 10;
-				else
-					m_playlist_pageups--;
-				return 0;
-
-			case VK_RETURN:
-                /* set playlist selection, and play */
-				return 0;
-			}
-		}
-
-		// allow the plugin to override any keys:
+		// allow the plugin to override any keys (first):
 		if (MyWindowProc(hWnd, uMsg, wParam, lParam) == 0)
 			return 0;
 
 		switch (wParam)
 		{
-		    case VK_F12:
+		    case VK_F1:
 			    m_show_press_f1_msg = 0;
 			    ToggleHelp();
 			    return 0;
@@ -2292,15 +2176,10 @@ LRESULT CPluginShell::PluginShellWindowProc(HWND hWnd, unsigned uMsg, WPARAM wPa
 		    case VK_ESCAPE:
 			    PostMessage(hWnd, WM_CLOSE, 0, 0);
 			    return 0;
-
-		    case VK_LEFT:
-		    case VK_RIGHT:
-		    {
-                /* rewind 5 seconds, ff 5 seconds */
-		    }
-		    return 0;
 		}
-		return 0;
+
+		// WM_KEYDOWN was not processed
+		return 1;
 	}
 
 	return MyWindowProc(hWnd, uMsg, wParam, lParam);

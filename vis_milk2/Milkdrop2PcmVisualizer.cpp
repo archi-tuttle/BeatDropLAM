@@ -131,51 +131,8 @@ LRESULT CALLBACK StaticWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
             break;
         }
 
-        case WM_KEYDOWN: {
-            /*if (playback && wParam >= VK_F1 && wParam <= VK_F8) {
-                switch (wParam) {
-                case VK_F1:
-                    playback->PauseOrResume();
-                    break;
-                case VK_F2:
-                    playback->Stop();
-                    break;
-                case VK_F3:
-                    playback->Previous();
-                    break;
-                case VK_F4:
-                    playback->Next();
-                    break;
-                case VK_F5:
-                    playback->SetVolume(playback->GetVolume() - 0.05);
-                    break;
-                case VK_F6:
-                    playback->SetVolume(playback->GetVolume() + 0.05);
-                    break;
-                case VK_F7:
-                    playback->ToggleShuffle();
-                    break;
-                case VK_F8:
-                    playback->ToggleMute();
-                    break;
-                }
-            }*/
-            g_plugin.PluginShellWindowProc(hWnd, uMsg, wParam, lParam);
-        }
-        break;
-
-        case WM_SYSKEYDOWN: {
-            if (wParam == VK_F4) {
-                PostQuitMessage(0);
-            }
-            else {
-                g_plugin.PluginShellWindowProc(hWnd, uMsg, wParam, lParam);
-            }
-            break;
-        }
-
         default:
-            return g_plugin.PluginShellWindowProc(hWnd, uMsg, wParam, lParam);
+            if (g_plugin.PluginShellWindowProc(hWnd, uMsg, wParam, lParam) == 0) return 0;
     }
 
     return DefWindowProc(hWnd, uMsg, wParam, lParam);

@@ -696,46 +696,7 @@ LRESULT CMilkMenu::HandleKeydown(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 					if (pBlend->eval(-1) > pItem->m_fMax) *pBlend = pItem->m_fMax;
 				}
 				break;
-			/*
-			case MENUITEMTYPE_OSC:
-				if (pItem->m_bEditingSubSel)
-				{
-					if (wParam == VK_UP)
-					{
-						pItem->m_nSubSel--;
-						if (pItem->m_nSubSel < 0) pItem->m_nSubSel = 4;
-					}
-					else if (wParam == VK_DOWN)
-					{
-						pItem->m_nSubSel++;
-						if (pItem->m_nSubSel > 4) pItem->m_nSubSel = 0;
-					}
-				}
-				else
-				{
-					switch(pItem->m_nSubSel)
-					{
-						also to do: make 'drawtext' draw it properly
 
-					case 0:
-						fixme	- what are the bounds for each type?  and are incs constant or log?
-						break;
-					case 1:
-						fixme
-						break;
-					case 2:
-						fixme
-						break;
-					case 3:
-						fixme
-						break;
-					case 4:
-						fixme
-						break;
-					}
-				}
-				break;
-				*/
 			}
 			return 0;
 

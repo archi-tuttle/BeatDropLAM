@@ -5152,8 +5152,8 @@ LRESULT CPlugin::MyWindowProc(HWND hWnd, unsigned uMsg, WPARAM wParam, LPARAM lP
 
     // IMPORTANT: For the WM_KEYDOWN, WM_KEYUP, and WM_CHAR messages,
     //   you must return 0 if you process the message (key),
-    //   and 1 if you do not.  DO NOT call DefWindowProc()
-    //   for these particular messages!
+    //   and 1 if you do not.  DefWindowProc() will be called for you 
+    //   automatically in the latter case.
 
     USHORT mask = 1 << (sizeof(SHORT)*8 - 1);
     bool bShiftHeldDown = (GetKeyState(VK_SHIFT) & mask) != 0;
@@ -5164,8 +5164,6 @@ LRESULT CPlugin::MyWindowProc(HWND hWnd, unsigned uMsg, WPARAM wParam, LPARAM lP
 
     switch (uMsg)
     {
-    case WM_COMMAND:
-
     case WM_CHAR:   // plain & simple alphanumeric keys
         nRepeat = LOWORD(lParam);
 		if (m_waitstring.bActive)	// if user is in the middle of editing a string
@@ -5405,44 +5403,12 @@ LRESULT CPlugin::MyWindowProc(HWND hWnd, unsigned uMsg, WPARAM wParam, LPARAM lP
 
 		switch(wParam)
 		{
-		case VK_F9:
+		case VK_F2:
             m_bShowSongTitle = !m_bShowSongTitle; // we processed (or absorbed) the key
 			m_bShowSongTime = !m_bShowSongTime;
 			m_bShowSongLen  = !m_bShowSongLen;
 		    m_bShowPresetInfo = !m_bShowPresetInfo;
             return 0; // we processed (or absorbed) the key
-		//case VK_F4:		m_bShowFPS = !m_bShowFPS;				return 0; // we processed (or absorbed) the key
-		//case VK_F6:		m_bShowRating = !m_bShowRating;			return 0; // we processed (or absorbed) the key
-		//case VK_F7:
-		//	if (m_nNumericInputMode == NUMERIC_INPUT_MODE_CUST_MSG)
-		//		ReadCustomMessages();		// re-read custom messages
-		//	return 0; // we processed (or absorbed) the key
-		//case VK_F8:
-		//	{
-		//		m_UI_mode = UI_CHANGEDIR;
-
-		//		// enter WaitString mode
-		//		m_waitstring.bActive = true;
-		//		m_waitstring.bFilterBadChars = false;
-		//		m_waitstring.bDisplayAsCode = false;
-		//		m_waitstring.nSelAnchorPos = -1;
-		//		m_waitstring.nMaxLen = min(sizeof(m_waitstring.szText)-1, MAX_PATH - 1);
-		//		lstrcpyW(m_waitstring.szText, GetPresetDir());
-		//		{
-		//			// for subtle beauty - remove the trailing '\' from the directory name (if it's not just "x:\")
-		//			int len = lstrlenW(m_waitstring.szText);
-		//			if (len > 3 && m_waitstring.szText[len-1] == '\\')
-		//				m_waitstring.szText[len-1] = 0;
-		//		}
-		//		wasabiApiLangString(IDS_DIRECTORY_TO_JUMP_TO, m_waitstring.szPrompt, 512);
-		//		m_waitstring.szToolTip[0] = 0;
-		//		m_waitstring.nCursorPos = lstrlenW(m_waitstring.szText);	// set the starting edit position
-		//	}
-		//	return 0; // we processed (or absorbed) the key
-
-  //      case VK_F9:
-  //          m_bShowShaderHelp = !m_bShowShaderHelp;
-  //          return FALSE;
 
         case VK_SCROLL:
             m_bPresetLockedByUser = GetKeyState(VK_SCROLL) & 1;
@@ -5450,10 +5416,6 @@ LRESULT CPlugin::MyWindowProc(HWND hWnd, unsigned uMsg, WPARAM wParam, LPARAM lP
             //int set = m_bPresetLockedByUser ?
 
 			return 0; // we processed (or absorbed) the key
-		//case VK_F6:	break;
-		//case VK_F7: conflict
-		//case VK_F8:	break;
-		//case VK_F9: conflict
 		}
 
 		// next handle the waitstring case (for string-editing),
@@ -6201,14 +6163,13 @@ LRESULT CPlugin::MyWindowProc(HWND hWnd, unsigned uMsg, WPARAM wParam, LPARAM lP
 
 	case WM_KEYUP:
     	return 1;
-		break;
 
     default:
-        return DefWindowProcW(hWnd, uMsg, wParam, lParam);
-        break;
+        // fall into default window proc
+        return 1;
     }
 
-    return 0;
+    return 1;
 };
 
 //----------------------------------------------------------------------
@@ -6516,11 +6477,6 @@ int CPlugin::HandleRegularKey(WPARAM wParam)
             return 0;
 		}
 		break;
-
-    case '`':
-    case '~':
-        m_bPresetLockedByUser = !m_bPresetLockedByUser;
-        return 0;
 
 	case 'l':				// LOAD PRESET
 	case 'L':
