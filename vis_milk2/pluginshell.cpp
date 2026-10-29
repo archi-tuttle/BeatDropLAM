@@ -2161,6 +2161,11 @@ LRESULT CPluginShell::PluginShellWindowProc(HWND hWnd, unsigned uMsg, WPARAM wPa
 		m_lost_focus = 1;
 		break;
 
+	case WM_RBUTTONUP:
+	case WM_LBUTTONUP:
+		PostMessage(hWnd, WM_CLOSE, 0, 0);
+		return 0;
+
 	case WM_KEYDOWN:
 		// allow the plugin to override any keys (first):
 		if (MyWindowProc(hWnd, uMsg, wParam, lParam) == 0)
