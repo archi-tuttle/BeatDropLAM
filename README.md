@@ -35,7 +35,7 @@ Use BeatDrop with your favourite
 The build output includes the 32-bit `d3dcompiler_47.dll` runtime used to compile legacy Direct3D 9 shaders. Keep this DLL beside `BeatDrop.exe` when distributing the standalone build.
 
 ## Build on Windows
-Install Visual Studio Build Tools with the C++ desktop workload and a Windows 10 SDK. Open the repository in VS Code and run `BeatDrop: Build Debug (Win32)` or `BeatDrop: Build Release (Win32)` from the Tasks menu. The Debug task is also the default build task. Each output folder contains `BeatDrop.exe`, `d3dcompiler_47.dll`, and the `data`, `docs`, `presets`, and `textures` resource folders.
+Install Visual Studio Build Tools with the C++ desktop workload and a Windows 10 SDK. Open the repository in VS Code and run `BeatDrop: Build Debug (Win32)` or `BeatDrop: Build Release (Win32)` from the Tasks menu. The Debug task is also the default build task. Each configuration folder (`Release` or `Debug`) has a `bin` subfolder containing `BeatDrop.exe`, `d3dcompiler_47.dll`, and the `data`, `docs`, `presets`, and `textures` resource folders, with intermediate build files kept in the `obj` subfolder.
 
 ## Acknowledgements
 Special thanks to:
