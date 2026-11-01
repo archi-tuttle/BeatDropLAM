@@ -388,7 +388,7 @@ comp_34=`    ret1 = max(ret1,(crisp*2+blur)*inten);
 comp_35=`n++;
 comp_36=`}
 comp_37=`
-comp_38=`float3 ret1 = ret1 ;
+comp_38=`
 comp_39=`ret *= GetPixel(.5+uv_orig*aspect.yx*10);
 comp_40=`ret+=GetPixel(.5-uv_orig*aspect.xy*10);
 comp_41=`

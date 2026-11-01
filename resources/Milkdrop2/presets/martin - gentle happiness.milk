@@ -389,9 +389,9 @@ warp_7=`//uv = float2(uv.x,uv.y)*aspect.xy;
 warp_8=`
 warp_9=`int2 k1 = (texsize.xy*uv)%2;
 warp_10=`
-warp_11=`double3 ist = GetBlur1(uv*1);
+warp_11=`float3 ist = GetBlur1(uv*1);
 warp_12=`
-warp_13=`double3 crisp = tex2D(sampler_main,uv);
+warp_13=`float3 crisp = tex2D(sampler_main,uv);
 warp_14=`crisp = crisp + (.03) -.01*pow(rad,2);
 warp_15=`
 warp_16=`float3 ret1 = crisp;

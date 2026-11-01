@@ -383,7 +383,7 @@ comp_33=`n++;
 comp_34=`}
 comp_35=`
 comp_36=`
-comp_37=`float3 ret1 = ret1 ;
+comp_37=`
 comp_38=`//ret1 = GetPixel(.5+uv_orig*aspect.yx*1.2);
 comp_39=`
 comp_40=`

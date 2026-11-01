@@ -383,14 +383,14 @@ warp_15=`         - tex2D(sampler_main,uv-hor));
 warp_16=`float dy = f0*lum(tex2D(sampler_main,uv+ver) 
 warp_17=`         - tex2D(sampler_main,uv-ver));
 warp_18=`
-warp_19=`double2 zz = float2(dx,dy);
+warp_19=`float2 zz = float2(dx,dy);
 warp_20=`float trel = time/3;
 warp_21=`//zz = mul(zz,float2x2(_qb));
 warp_22=`
-warp_23=`double3 crisp = tex2D(sampler_main,uv+zz*.02);
+warp_23=`float3 crisp = tex2D(sampler_main,uv+zz*.02);
 warp_24=`crisp = pow(crisp,1) + .06*noise1 - length(zz)*.03 ;
 warp_25=`
-warp_26=`double3 blur = GetBlur1(uv);
+warp_26=`float3 blur = GetBlur1(uv);
 warp_27=`
 warp_28=`ret = -blur*.1+ crisp;
 warp_29=`    
