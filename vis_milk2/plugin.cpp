@@ -934,8 +934,8 @@ void CPlugin::MyPreInitialize()
     // CONFIG PANEL SETTINGS THAT WE'VE ADDED (TAB #2)
 	m_bFirstRun		            = true;
     m_bInitialPresetSelected    = false;
-	m_fBlendTimeUser			= 1.7f;
-	m_fBlendTimeAuto			= 2.7f;
+	m_fBlendTimeUser			= 3.0f;
+	m_fBlendTimeAuto			= 10.0f;
 	m_fTimeBetweenPresets		= 16.0f;
 	m_fTimeBetweenPresetsRand	= 10.0f;
 	m_bSequentialPresetOrder    = false;
@@ -5810,13 +5810,21 @@ LRESULT CPlugin::MyWindowProc(HWND hWnd, unsigned uMsg, WPARAM wParam, LPARAM lP
 
 		// case 3: handle non-character keys (virtual keys) and return 0.
         //         if we don't handle them, return 1, and the shell will
-        //         (passing some to the shell's key bindings, some to Winamp,
+        //         (passing some to the shell's key bindings
         //          and some to DefWindowProc)
 		//		note: regular hotkeys should be handled in HandleRegularKey.
 		switch(wParam)
 		{
 		case VK_LEFT:
 		case VK_RIGHT:
+            if (m_UI_mode == UI_REGULAR)
+            {
+                if (wParam==VK_LEFT)
+                    PrevPreset(0);
+                else
+                    NextPreset(m_fBlendTimeUser);
+				return 0; // we processed (or absorbed) the key
+            }
 			if (m_UI_mode == UI_LOAD)
 			{
 				// it's annoying when the music skips if you hit the left arrow from the Load menu, so instead, we exit the menu
@@ -6226,10 +6234,10 @@ int CPlugin::HandleRegularKey(WPARAM wParam)
 		return 0; // we processed (or absorbed) the key
 
     // row 1 keys
-	case 'q':
+	case 'z':
 		m_pState->m_fVideoEchoZoom /= 1.05f;
 		return 0; // we processed (or absorbed) the key
-	case 'Q':
+	case 'Z':
 		m_pState->m_fVideoEchoZoom *= 1.05f;
 		return 0; // we processed (or absorbed) the key
 	case 'w':

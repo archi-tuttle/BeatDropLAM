@@ -2178,6 +2178,10 @@ LRESULT CPluginShell::PluginShellWindowProc(HWND hWnd, unsigned uMsg, WPARAM wPa
 			    return 0;
 
 		    case VK_ESCAPE:
+		    case VK_RETURN:
+			case VK_F11:
+			case 'Q':
+			case 'X':
 			    PostMessage(hWnd, WM_CLOSE, 0, 0);
 			    return 0;
 		}
