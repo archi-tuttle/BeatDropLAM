@@ -1,17 +1,18 @@
  GENERAL:
 
-   ESC             Exit BeatDrop
-   F1              show/hide help
+   ESC / RMB           Exit BeatDrop
+   F1                  show/hide help
 
  PRESETS:
 
-   F2              show/hide preset name
-   SPACE / H       soft/hard cut to next preset
-   BACKSPACE       go back to previous preset
-   SCROLL LOCK     lock/unlock current preset
-   R               toggle random/sequential preset order 
-   L               load specific preset
-   M               show/hide preset-editing Menu
-   S               save new preset
-   A               do random mini-mash-up
-   D               toggle comp/warp shader locks
+   F2 / LMB            show/hide preset name
+   SPACE / RIGHT       soft cut to next preset
+   H                   hard cut to next preset
+   BACKSPACE / LEFT    go back to previous preset
+   SCROLL LOCK         lock/unlock current preset
+   R                   toggle random/sequential preset order 
+   L                   load specific preset
+   M                   show/hide preset-editing Menu
+   S                   save new preset
+   A                   do random mini-mash-up
+   D                   toggle comp/warp shader locks

@@ -5404,9 +5404,6 @@ LRESULT CPlugin::MyWindowProc(HWND hWnd, unsigned uMsg, WPARAM wParam, LPARAM lP
 		switch(wParam)
 		{
 		case VK_F2:
-            m_bShowSongTitle = !m_bShowSongTitle; // we processed (or absorbed) the key
-			m_bShowSongTime = !m_bShowSongTime;
-			m_bShowSongLen  = !m_bShowSongLen;
 		    m_bShowPresetInfo = !m_bShowPresetInfo;
             return 0; // we processed (or absorbed) the key
 
@@ -6159,14 +6156,12 @@ LRESULT CPlugin::MyWindowProc(HWND hWnd, unsigned uMsg, WPARAM wParam, LPARAM lP
                 return 0;
             }
 		}
-        return 1; // end case WM_KEYDOWN
+        break; // end case WM_KEYDOWN
 
-	case WM_KEYUP:
-    	return 1;
+	case WM_LBUTTONUP:
+        m_bShowPresetInfo = !m_bShowPresetInfo;
+        return 0; // we processed left mouse button up
 
-    default:
-        // fall into default window proc
-        return 1;
     }
 
     return 1;

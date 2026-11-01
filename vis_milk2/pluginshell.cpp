@@ -2162,7 +2162,6 @@ LRESULT CPluginShell::PluginShellWindowProc(HWND hWnd, unsigned uMsg, WPARAM wPa
 		break;
 
 	case WM_RBUTTONUP:
-	case WM_LBUTTONUP:
 		PostMessage(hWnd, WM_CLOSE, 0, 0);
 		return 0;
 
