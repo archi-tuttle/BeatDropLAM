@@ -502,8 +502,27 @@ int StartThreads(HINSTANCE instance) {
     }
 #else
     int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow) {
+        // Named mutex enforces a single instance; the OS releases it on process exit.
+        HANDLE singleInstance = CreateMutexW(nullptr, FALSE, L"Local\\BeatDrop_SingleInstance");
+        if (singleInstance && GetLastError() == ERROR_ALREADY_EXISTS) {
+            CloseHandle(singleInstance);
+            HWND existing = FindWindowW(L"Direct3DWindowClass", nullptr);
+            if (existing) {
+                if (IsIconic(existing)) {
+                    ShowWindow(existing, SW_RESTORE);
+                }
+                SetForegroundWindow(existing);
+            }
+            return 0;
+        }
+
         api_orig_hinstance = hInstance;
-        return StartThreads(hInstance);
+        int result = StartThreads(hInstance);
+
+        if (singleInstance) {
+            CloseHandle(singleInstance);
+        }
+        return result;
     }
 #endif
 
