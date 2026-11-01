@@ -52,11 +52,12 @@ static unsigned char pcmRightOut[SAMPLE_SIZE];
 
 static HICON icon = nullptr;
 
-void InitD3d(HWND hwnd, int width, int height) {
+bool InitD3d(HWND hwnd, int width, int height) {
     pD3D9 = Direct3DCreate9(D3D_SDK_VERSION);
+    if (!pD3D9) return false;
 
     D3DDISPLAYMODE mode;
-    pD3D9->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
+    if (FAILED(pD3D9->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode))) return false;
 
     UINT adapterId = g_plugin.m_adapterId;
 
@@ -79,13 +80,13 @@ void InitD3d(HWND hwnd, int width, int height) {
     d3dPp.MultiSampleType = D3DMULTISAMPLE_NONE;
     d3dPp.hDeviceWindow = (HWND) hwnd;
 
-    pD3D9->CreateDevice(
+    return SUCCEEDED(pD3D9->CreateDevice(
         adapterId,
         D3DDEVTYPE_HAL,
         (HWND) hwnd,
         D3DCREATE_HARDWARE_VERTEXPROCESSING,
         &d3dPp,
-        &pD3DDevice);
+        &pD3DDevice));
 }
 
 void DeinitD3d() {
@@ -157,7 +158,7 @@ LRESULT CALLBACK StaticWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-void RenderFrame() {
+bool RenderFrame() {
     {
         std::unique_lock<std::mutex> lock(pcmMutex);
         memcpy(pcmLeftOut, pcmLeftIn, SAMPLE_SIZE);
@@ -166,9 +167,22 @@ void RenderFrame() {
         memset(pcmRightIn, 0, SAMPLE_SIZE);
     }
 
-    g_plugin.PluginRender(
+    return g_plugin.PluginRender(
         (unsigned char*) pcmLeftOut,
-        (unsigned char*) pcmRightOut);
+        (unsigned char*) pcmRightOut) != 0;
+}
+
+// Full teardown and rebuild, for when IDirect3DDevice9::Reset cannot recover (e.g. GPU driver restart).
+bool RecreateGraphics(HWND hwnd, int width, int height) {
+    g_plugin.PluginQuit();
+    DeinitD3d();
+
+    if (!InitD3d(hwnd, width, height)) {
+        DeinitD3d();
+        return false;
+    }
+
+    return g_plugin.PluginInitialize(pD3DDevice, &d3dPp, hwnd, width, height) != 0;
 }
 
 unsigned __stdcall CreateWindowAndRun(void* data) {
@@ -251,15 +265,47 @@ unsigned __stdcall CreateWindowAndRun(void* data) {
     MSG msg;
     msg.message = WM_NULL;
 
+    bool needRecreate = false;
+    ULONGLONG lostSince = 0;
+    ULONGLONG nextRecreate = 0;
+
     PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
     while (WM_QUIT != msg.message) {
         if (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+        else if (needRecreate) {
+            if (GetTickCount64() >= nextRecreate) {
+                if (RecreateGraphics(hwnd, windowWidth, windowHeight)) {
+                    needRecreate = false;
+                } else {
+                    nextRecreate = GetTickCount64() + 1000;
+                }
+            }
+            Sleep(50);
+        }
         else {
             GetAudioBuf(pcmLeftIn, pcmRightIn, SAMPLE_SIZE);
-            RenderFrame();
+
+            HRESULT hr = pD3DDevice->TestCooperativeLevel();
+            if (hr == D3D_OK) {
+                lostSince = 0;
+            } else if (hr == D3DERR_DRIVERINTERNALERROR || hr == D3DERR_DEVICEREMOVED) {
+                needRecreate = true;
+                continue;
+            } else if (!lostSince) {
+                lostSince = GetTickCount64();
+            } else if (GetTickCount64() - lostSince > 3000) {
+                // Reset has not brought the device back; rebuild it.
+                lostSince = 0;
+                needRecreate = true;
+                continue;
+            }
+
+            if (!RenderFrame()) {
+                needRecreate = true;
+            }
         }
     }
 

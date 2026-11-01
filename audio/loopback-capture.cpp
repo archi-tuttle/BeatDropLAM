@@ -2,17 +2,48 @@
 
 #include "common.h"
 
+// Returns S_OK when stopped, S_FALSE when the default device changed and capture should restart.
 HRESULT LoopbackCapture(
     IMMDevice *pMMDevice,
     HMMIO hFile,
     bool bInt16,
     HANDLE hStartedEvent,
     HANDLE hStopEvent,
+    HANDLE hRestartEvent,
     PUINT32 pnFrames
 );
 
 HRESULT WriteWaveHeader(HMMIO hFile, LPCWAVEFORMATEX pwfx, MMCKINFO *pckRIFF, MMCKINFO *pckData);
 HRESULT FinishWaveFile(HMMIO hFile, MMCKINFO *pckRIFF, MMCKINFO *pckData);
+HRESULT get_default_device(IMMDevice **ppMMDevice); // prefs.cpp
+
+class DefaultDeviceWatcher : public IMMNotificationClient {
+public:
+    explicit DefaultDeviceWatcher(HANDLE hEvent) : m_hEvent(hEvent) {}
+
+    ULONG STDMETHODCALLTYPE AddRef() override { return 1; }
+    ULONG STDMETHODCALLTYPE Release() override { return 1; }
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppv) override {
+        if (IsEqualIID(riid, __uuidof(IUnknown)) || IsEqualIID(riid, __uuidof(IMMNotificationClient))) {
+            *ppv = static_cast<IMMNotificationClient*>(this);
+            return S_OK;
+        }
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    HRESULT STDMETHODCALLTYPE OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR) override {
+        if (eRender == flow && eConsole == role) SetEvent(m_hEvent);
+        return S_OK;
+    }
+    HRESULT STDMETHODCALLTYPE OnDeviceAdded(LPCWSTR) override { return S_OK; }
+    HRESULT STDMETHODCALLTYPE OnDeviceRemoved(LPCWSTR) override { return S_OK; }
+    HRESULT STDMETHODCALLTYPE OnDeviceStateChanged(LPCWSTR, DWORD) override { return S_OK; }
+    HRESULT STDMETHODCALLTYPE OnPropertyValueChanged(LPCWSTR, const PROPERTYKEY) override { return S_OK; }
+
+private:
+    HANDLE m_hEvent;
+};
 
 DWORD WINAPI LoopbackCaptureThreadFunction(LPVOID pContext) {
     LoopbackCaptureThreadFunctionArguments *pArgs =
@@ -25,14 +56,75 @@ DWORD WINAPI LoopbackCaptureThreadFunction(LPVOID pContext) {
     }
     CoUninitializeOnExit cuoe;
 
-    pArgs->hr = LoopbackCapture(
-        pArgs->pMMDevice,
-        pArgs->hFile,
-        pArgs->bInt16,
-        pArgs->hStartedEvent,
-        pArgs->hStopEvent,
-        &pArgs->nFrames
-    );
+    HANDLE hRestartEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (NULL == hRestartEvent) {
+        pArgs->hr = HRESULT_FROM_WIN32(GetLastError());
+        return 0;
+    }
+    CloseHandleOnExit closeRestartEvent(hRestartEvent);
+
+    DefaultDeviceWatcher watcher(hRestartEvent);
+    IMMDeviceEnumerator *pEnumerator = NULL;
+    if (SUCCEEDED(CoCreateInstance(
+        __uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL,
+        __uuidof(IMMDeviceEnumerator), (void**)&pEnumerator))) {
+        pEnumerator->RegisterEndpointNotificationCallback(&watcher);
+    }
+
+    // The first attempt uses the caller's device and reports failures to the caller;
+    // later attempts re-resolve the default endpoint so a driver reset can be survived.
+    bool bFirst = true;
+    for (;;) {
+        IMMDevice *pDevice = pArgs->pMMDevice;
+        IMMDevice *pOwnedDevice = NULL;
+        HRESULT hr;
+
+        if (!bFirst) {
+            hr = get_default_device(&pOwnedDevice);
+            pDevice = pOwnedDevice;
+        } else {
+            hr = S_OK;
+        }
+
+        if (SUCCEEDED(hr)) {
+            hr = LoopbackCapture(
+                pDevice,
+                bFirst ? pArgs->hFile : NULL,
+                pArgs->bInt16,
+                pArgs->hStartedEvent,
+                pArgs->hStopEvent,
+                hRestartEvent,
+                &pArgs->nFrames
+            );
+        }
+
+        if (pOwnedDevice) pOwnedDevice->Release();
+
+        if (bFirst && FAILED(hr)) {
+            pArgs->hr = hr;
+            break;
+        }
+        bFirst = false;
+
+        if (S_OK == hr) {
+            pArgs->hr = S_OK;
+            break;
+        }
+
+        ResetAudioBuf();
+        if (S_FALSE == hr) continue;
+
+        LOG(L"Loopback capture lost (hr = 0x%08x); retrying", hr);
+        if (WAIT_OBJECT_0 == WaitForSingleObject(pArgs->hStopEvent, 1000)) {
+            pArgs->hr = S_OK;
+            break;
+        }
+    }
+
+    if (pEnumerator) {
+        pEnumerator->UnregisterEndpointNotificationCallback(&watcher);
+        pEnumerator->Release();
+    }
 
     return 0;
 }
@@ -43,6 +135,7 @@ HRESULT LoopbackCapture(
     bool bInt16,
     HANDLE hStartedEvent,
     HANDLE hStopEvent,
+    HANDLE hRestartEvent,
     PUINT32 pnFrames
 ) {
     HRESULT hr;
@@ -200,9 +293,10 @@ HRESULT LoopbackCapture(
     SetEvent(hStartedEvent);
     
     // loopback capture loop
-    HANDLE waitArray[2] = { hStopEvent, hWakeUp };
+    HANDLE waitArray[3] = { hStopEvent, hWakeUp, hRestartEvent };
     DWORD dwWaitResult;
 
+    bool bRestart = false;
     bool bDone = false;
     bool bFirstPacket = true;
 
@@ -299,6 +393,13 @@ HRESULT LoopbackCapture(
             continue; // exits loop
         }
 
+        if (WAIT_OBJECT_0 + 2 == dwWaitResult) {
+            LOG(L"%s", L"Default render device changed; restarting capture");
+            bRestart = true;
+            bDone = true;
+            continue;
+        }
+
         if (WAIT_OBJECT_0 + 1 != dwWaitResult) {
             ERR(L"Unexpected WaitForMultipleObjects return value %u on pass %u after %u frames", dwWaitResult, nPasses, *pnFrames);
             return E_UNEXPECTED;
@@ -313,7 +414,7 @@ HRESULT LoopbackCapture(
         }
     }
 
-    return hr;
+    return bRestart ? S_FALSE : hr;
 }
 
 HRESULT WriteWaveHeader(HMMIO hFile, LPCWAVEFORMATEX pwfx, MMCKINFO *pckRIFF, MMCKINFO *pckData) {
