@@ -1,0 +1,7 @@
+
+Abbildname                     PID Sitzungsname       Sitz.-Nr. Speichernutzung
+========================= ======== ================ =========== ===============
+BeatDrop.exe                 10880 Console                    1        37.164 K
+
+BeatDrop.exe process count: 
+PASS: only one instance survived.
