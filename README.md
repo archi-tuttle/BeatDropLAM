@@ -4,29 +4,10 @@ BeatDrop is a stand-alone implementation of the amazing Milkdrop2 Winamp plug-in
 
 It lets you experience the stunning visual 2D effects with your music player of choice. No additional configuration steps needed! Just start BeatDrop and play your music.
 
-Use BeatDrop with your favourite
-
-* Music player:
-  [foobar2000](https://www.foobar2000.org/),
-  [VLC media player](https://www.videolan.org/vlc/index.html),
-  [Clementine](https://www.clementine-player.org/),
-  [AIMP](https://www.aimp.ru/),
-  ...
-
-* Web-based player:
-  [SoundCloud](https://soundcloud.com/),
-  [YouTube](https://www.youtube.com/),
-  [Vimeo](https://vimeo.com/),
-  ...
-
-* Internet Radio station:
-  [SomaFM](https://somafm.com/),
-  [DI.FM](https://www.di.fm/),
-  [RauteMusik.FM](https://www.rm.fm/),
-  ...
+Use BeatDrop with any your favourite desktop music players, web-based player/radio/streaming clients or local streaming clients (e.g. squeezelite).
 
 ## System Requirements
-* Windows 10, Windows 8.1 or Windows 7 SP1
+* Windows 11, Windows 10, Windows 8.1 or Windows 7 SP1
 
 * WASAPI-compatible sound card
 
@@ -35,7 +16,7 @@ Use BeatDrop with your favourite
 The build output includes the 32-bit `d3dcompiler_47.dll` runtime used to compile legacy Direct3D 9 shaders. Keep this DLL beside `BeatDrop.exe` when distributing the standalone build.
 
 ## Build on Windows
-Install Visual Studio Build Tools with the C++ desktop workload and a Windows 10 SDK. Open the repository in VS Code and run `BeatDrop: Build Debug (Win32)` or `BeatDrop: Build Release (Win32)` from the Tasks menu. The Debug task is also the default build task. Each configuration folder (`Release` or `Debug`) has a `bin` subfolder containing `BeatDrop.exe`, `d3dcompiler_47.dll`, and the `data`, `docs`, `presets`, and `textures` resource folders, with intermediate build files kept in the `obj` subfolder.
+Install Visual Studio Build Tools with the C++ desktop workload and a Windows 11/10 SDK. Open the repository in VS Code and run `BeatDrop: Build Debug (Win32)` or `BeatDrop: Build Release (Win32)` from the Tasks menu. The Debug task is also the default build task. Each configuration folder (`Release` or `Debug`) has a `bin` subfolder containing `BeatDrop.exe`, `d3dcompiler_47.dll`, and the `data`, `docs`, `presets`, and `textures` resource folders, with intermediate build files kept in the `obj` subfolder.
 
 ## Acknowledgements
 Special thanks to:
