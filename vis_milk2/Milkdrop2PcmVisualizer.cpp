@@ -118,6 +118,25 @@ void EnterFullScreen(HWND hwnd, int* width, int* height) {
     SetWindowPos(hwnd, HWND_TOPMOST, info.rcMonitor.left, info.rcMonitor.top, *width, *height, SWP_DRAWFRAME | SWP_FRAMECHANGED);
 }
 
+// A process started from a hidden/background parent has no foreground right, so plain
+// ShowWindow/SetWindowPos leaves the window behind the active app. Borrow the input
+// queue of the current foreground thread to be allowed to take focus.
+void ForceToForeground(HWND hwnd) {
+    HWND fg = GetForegroundWindow();
+    DWORD fgThread = fg ? GetWindowThreadProcessId(fg, nullptr) : 0;
+    DWORD ourThread = GetCurrentThreadId();
+    bool attached = fgThread && fgThread != ourThread && AttachThreadInput(ourThread, fgThread, TRUE);
+
+    ShowWindow(hwnd, SW_SHOW);
+    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+    BringWindowToTop(hwnd);
+    SetForegroundWindow(hwnd);
+    SetActiveWindow(hwnd);
+    SetFocus(hwnd);
+
+    if (attached) AttachThreadInput(ourThread, fgThread, FALSE);
+}
+
 LRESULT CALLBACK StaticWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch(uMsg) {
         case WM_CLOSE: {
@@ -214,7 +233,7 @@ unsigned __stdcall CreateWindowAndRun(void* data) {
     SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM) icon);
 
     EnterFullScreen(hwnd, &windowWidth, &windowHeight);
-    ShowWindow(hwnd, SW_SHOW);
+    ForceToForeground(hwnd);
 
     int lastWidth = windowWidth;
     int lastHeight = windowHeight;
